@@ -1,0 +1,12 @@
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.env
+*.log
+*.err.log
+runev.db
+*.ipynb
