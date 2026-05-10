@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend import models
+import models
 from backend.api.v1 import auth, payments, pricing, providers, requests, tracking
 from backend.database import engine
 
