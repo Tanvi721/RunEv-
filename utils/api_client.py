@@ -3,8 +3,10 @@ from typing import Any
 
 import requests
 
-API_BASE_URL = os.getenv("RUNEV_API_BASE_URL", "https://runev-1b1v.onrender.com")
-
+API_BASE_URL = os.getenv(
+    "RUNEV_API_BASE_URL",
+    "https://runev-1b1v.onrender.com"
+)
 
 class ApiError(Exception):
     pass
@@ -20,7 +22,7 @@ def request_json(
     method: str,
     path: str,
     token: str | None = None,
-    timeout: int = 8,
+    timeout: int = 30,
     **kwargs: Any,
 ) -> Any:
     try:
