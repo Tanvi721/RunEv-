@@ -50,12 +50,26 @@ def inject_global_styles() -> None:
                 color: var(--runev-text);
             }
 
-            header, footer, #MainMenu { visibility: hidden; }
-            [data-testid="stDecoration"], [data-testid="collapsedControl"] { display: none; }
+            footer, #MainMenu { visibility: hidden; }
+            [data-testid="stHeader"] {
+                background: transparent !important;
+                height: 2.75rem !important;
+            }
+            [data-testid="stDecoration"] { display: none; }
+            [data-testid="stToolbar"] {
+                visibility: visible !important;
+                background: transparent !important;
+            }
+            [data-testid="collapsedControl"] {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                z-index: 999999 !important;
+            }
 
             .block-container {
                 max-width: 1440px;
-                padding: 1.2rem 1.6rem 3rem;
+                padding: 0.2rem 1.6rem 3rem;
             }
 
             [data-testid="stSidebar"] {

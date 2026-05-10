@@ -1,5 +1,7 @@
 .git
 .github
+.venv
+.vscode
 __pycache__
 *.pyc
 *.pyo
@@ -8,5 +10,7 @@ __pycache__
 .env
 *.log
 *.err.log
-runev.db
+*.db
+*.sqlite
+*.sqlite3
 *.ipynb

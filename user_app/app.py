@@ -540,10 +540,17 @@ def render_sidebar() -> str:
             "History": "🧾",
             "Settings": "⚙️",
         }
-        default_index = choices.index(sync_label if sync_label in choices else "Dashboard")
-        labels = [f"{icon_map[item]}  {item}" for item in choices]
-        nav_label = st.radio("Navigation", labels, index=default_index, key="user_nav_radio")
-        nav = choices[labels.index(nav_label)]
+        current_nav = st.session_state.get("user_nav_radio")
+        if current_nav not in choices:
+            st.session_state.user_nav_radio = sync_label if sync_label in choices else "Dashboard"
+        nav = st.radio(
+            "Navigation",
+            choices,
+            index=choices.index(st.session_state.user_nav_radio),
+            key="user_nav_radio",
+            label_visibility="collapsed",
+            format_func=lambda item: f"{icon_map[item]}  {item}",
+        )
         st.divider()
         auto_refresh(12, enabled=nav in {"Dashboard", "Live Trips"})
         if st.button("Refresh", use_container_width=True):
