@@ -8,6 +8,8 @@ if exist ".venv\Scripts\python.exe" (
 )
 
 echo Using Python: %PYTHON_CMD%
+set "RUNEV_API_BASE_URL=http://127.0.0.1:8000"
+
 echo Initializing database if needed...
 %PYTHON_CMD% init_db.py
 if errorlevel 1 (

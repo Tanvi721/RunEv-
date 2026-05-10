@@ -5,11 +5,43 @@ import requests
 
 API_BASE_URL = os.getenv(
     "RUNEV_API_BASE_URL",
-    "https://runev-1b1v.onrender.com"
+    "http://127.0.0.1:8000"
 )
+
+
+def api_base_url() -> str:
+    return os.getenv("RUNEV_API_BASE_URL", API_BASE_URL).rstrip("/")
 
 class ApiError(Exception):
     pass
+
+
+FIELD_LABELS = {
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "vehicle_number": "Vehicle number",
+}
+
+
+def format_error_detail(detail: Any) -> str:
+    if isinstance(detail, list):
+        messages = []
+        for item in detail:
+            if not isinstance(item, dict):
+                messages.append(str(item))
+                continue
+            loc = item.get("loc") or []
+            field = next((part for part in reversed(loc) if isinstance(part, str) and part != "body"), "")
+            label = FIELD_LABELS.get(field, field.replace("_", " ").title() if field else "Field")
+            message = item.get("msg", "Invalid value")
+            messages.append(f"{label}: {message}")
+        return "\n".join(messages)
+
+    if isinstance(detail, dict):
+        return str(detail.get("message") or detail.get("detail") or detail)
+
+    return str(detail)
 
 
 def auth_headers(token: str | None) -> dict[str, str]:
@@ -28,7 +60,7 @@ def request_json(
     try:
         response = requests.request(
             method,
-            f"{API_BASE_URL}{path}",
+            f"{api_base_url()}{path}",
             headers={**auth_headers(token), **kwargs.pop("headers", {})},
             timeout=timeout,
             **kwargs,
@@ -41,7 +73,7 @@ def request_json(
             detail = response.json().get("detail", response.text)
         except ValueError:
             detail = response.text
-        raise ApiError(str(detail))
+        raise ApiError(format_error_detail(detail))
 
     if not response.content:
         return None

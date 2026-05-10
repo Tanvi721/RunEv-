@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import User, Provider
+from backend.models import User, Provider
 import bcrypt
 import jwt
 import os

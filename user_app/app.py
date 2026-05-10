@@ -504,9 +504,13 @@ def render_login() -> None:
                 if st.form_submit_button("Create Account", use_container_width=True):
                     if not username or not email or not password:
                         st.error("Please fill all fields.")
+                    elif len(username.strip()) < 2:
+                        st.error("Username must be at least 2 characters.")
+                    elif len(password) < 6:
+                        st.error("Password must be at least 6 characters.")
                     else:
                         try:
-                            api_client.register(username, email, password, role="user")
+                            api_client.register(username.strip(), email.strip(), password, role="user")
                             st.success("Account created. You can login now.")
                         except api_client.ApiError as exc:
                             st.error(str(exc))

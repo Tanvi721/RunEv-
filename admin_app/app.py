@@ -244,9 +244,13 @@ def render_login() -> None:
                 if st.form_submit_button("Register Fleet", use_container_width=True):
                     if not username or not email or not password or not vehicle_number:
                         st.error("Please fill all fields.")
+                    elif len(username.strip()) < 2:
+                        st.error("Driver name must be at least 2 characters.")
+                    elif len(password) < 6:
+                        st.error("Password must be at least 6 characters.")
                     else:
                         try:
-                            api_client.register(username, email, password, role="provider", vehicle_number=vehicle_number)
+                            api_client.register(username.strip(), email.strip(), password, role="provider", vehicle_number=vehicle_number.strip())
                             st.success("Driver account created. Please login.")
                         except api_client.ApiError as exc:
                             st.error(str(exc))

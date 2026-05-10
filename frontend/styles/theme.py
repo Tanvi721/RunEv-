@@ -40,6 +40,11 @@ def inject_global_styles() -> None:
                 font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             }
 
+            html, body, .stApp {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
             body, .stApp {
                 background:
                     linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92)),
@@ -68,8 +73,15 @@ def inject_global_styles() -> None:
             }
 
             .block-container {
-                max-width: 1440px;
+                width: 100%;
+                max-width: min(1440px, 100%);
+                box-sizing: border-box;
                 padding: 0.2rem 1.6rem 3rem;
+            }
+
+            [data-testid="stHorizontalBlock"],
+            [data-testid="column"] {
+                min-width: 0;
             }
 
             [data-testid="stSidebar"] {
