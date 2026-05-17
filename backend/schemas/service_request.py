@@ -24,7 +24,10 @@ class ServiceRequestResponse(BaseModel):
     payment_method: Optional[str] = None
     charged_units_kwh: Optional[float] = None
     total_price: Optional[float] = None
+    otp_code: Optional[str] = None
+    otp_verified_at: Optional[datetime] = None
     provider: Optional[ProviderResponse] = None
+    user: Optional[dict] = None
     estimated_distance_km: Optional[float] = None
     estimated_eta_minutes: Optional[int] = None
     notification_message: Optional[str] = None
@@ -46,3 +49,7 @@ class ChargeUnitsRequest(BaseModel):
 
 class PaymentMethodSelection(BaseModel):
     payment_method: str
+
+
+class OtpVerificationRequest(BaseModel):
+    otp_code: str

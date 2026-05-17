@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend import models
-from backend.api.v1 import auth, payments, pricing, providers, requests, tracking
+from backend.api.v1 import auth, payments, pricing, providers, ratings, requests, tracking
 from backend.database import engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -47,6 +47,7 @@ app.include_router(payments.router, prefix="/api/v1")
 app.include_router(pricing.router, prefix="/api/v1")
 app.include_router(providers.router, prefix="/api/v1")
 app.include_router(requests.router, prefix="/api/v1")
+app.include_router(ratings.router, prefix="/api/v1")
 app.include_router(tracking.router, prefix="/api/v1")
 app.include_router(tracking.ws_router)
 

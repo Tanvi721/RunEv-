@@ -6,6 +6,8 @@ import folium
 from folium import plugins
 from streamlit_folium import st_folium
 
+ON_SITE_STATUSES = {"arrived", "charging", "awaiting_payment", "completed"}
+
 
 def _vehicle_icon(color: str = "#00e5a8") -> folium.DivIcon:
     return folium.DivIcon(
@@ -68,7 +70,13 @@ def render_user_map(user_lat: float, user_lng: float, providers: Iterable[dict],
     st_folium(m, width=None, height=520, key=key)
 
 
-def render_trip_map(pickup_lat: float, pickup_lng: float, provider: dict | object | None, key: str = "trip_map") -> None:
+def render_trip_map(
+    pickup_lat: float,
+    pickup_lng: float,
+    provider: dict | object | None,
+    key: str = "trip_map",
+    trip_status: str | None = None,
+) -> None:
     m = folium.Map(location=[pickup_lat, pickup_lng], zoom_start=14, tiles=_tiles(), control_scale=True)
     folium.Marker([pickup_lat, pickup_lng], tooltip="Customer pickup", icon=_customer_icon()).add_to(m)
     folium.Circle([pickup_lat, pickup_lng], radius=900, color="#3b82f6", fill=True, fill_opacity=0.08, weight=1).add_to(m)
@@ -80,9 +88,14 @@ def render_trip_map(pickup_lat: float, pickup_lng: float, provider: dict | objec
         lng = getter("current_lng")
         if lat and lng:
             vehicle = getter("vehicle_number", "Charging Van")
-            folium.Marker([lat, lng], popup=vehicle, tooltip=vehicle, icon=_vehicle_icon()).add_to(m)
-            plugins.AntPath([[pickup_lat, pickup_lng], [lat, lng]], color="#00e5a8", pulse_color="#3b82f6", weight=5, delay=700).add_to(m)
-            bounds.append([lat, lng])
+            is_on_site = trip_status in ON_SITE_STATUSES
+            marker_lat = pickup_lat if is_on_site else lat
+            marker_lng = pickup_lng if is_on_site else lng
+            tooltip = f"{vehicle} at pickup" if is_on_site else vehicle
+            folium.Marker([marker_lat, marker_lng], popup=vehicle, tooltip=tooltip, icon=_vehicle_icon()).add_to(m)
+            if not is_on_site:
+                plugins.AntPath([[pickup_lat, pickup_lng], [lat, lng]], color="#00e5a8", pulse_color="#3b82f6", weight=5, delay=700).add_to(m)
+                bounds.append([lat, lng])
 
     if len(bounds) > 1:
         m.fit_bounds(bounds, padding=(30, 30))
@@ -104,8 +117,12 @@ def render_provider_map(provider, requests_list=None, key: str = "provider_map")
         if pickup_lat is None or pickup_lng is None:
             continue
         status = getattr(req, "status", "pending")
+        is_on_site = status in ON_SITE_STATUSES
         folium.Marker([pickup_lat, pickup_lng], tooltip=f"Customer: {status}", icon=_customer_icon()).add_to(m)
-        plugins.AntPath([[lat, lng], [pickup_lat, pickup_lng]], color="#00e5a8", pulse_color="#3b82f6", weight=4, delay=650).add_to(m)
+        if is_on_site:
+            folium.Marker([pickup_lat, pickup_lng], tooltip="Charging van at customer", icon=_vehicle_icon()).add_to(m)
+        else:
+            plugins.AntPath([[lat, lng], [pickup_lat, pickup_lng]], color="#00e5a8", pulse_color="#3b82f6", weight=4, delay=650).add_to(m)
         bounds.append([pickup_lat, pickup_lng])
 
     if len(bounds) > 1:

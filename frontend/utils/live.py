@@ -16,7 +16,6 @@ def auto_refresh(seconds: int = 10, enabled: bool = True) -> None:
 
 def push_notification(message: str, level: str = "info") -> None:
     st.session_state["_runev_live_notification"] = {"message": message, "level": level}
-    st.toast(message)
 
 
 def render_live_notification() -> None:

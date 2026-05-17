@@ -15,6 +15,9 @@ class ProviderResponse(BaseModel):
     price_per_kwh: Optional[float] = None
     driver_name: Optional[str] = None
     address: Optional[str] = None
+    phone: Optional[str] = None
+    average_rating: Optional[float] = None
+    rating_count: int = 0
 
     class Config:
         from_attributes = True

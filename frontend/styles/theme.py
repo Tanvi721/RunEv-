@@ -57,13 +57,19 @@ def inject_global_styles() -> None:
 
             footer, #MainMenu { visibility: hidden; }
             [data-testid="stHeader"] {
-                background: transparent !important;
-                height: 2.75rem !important;
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
             }
             [data-testid="stDecoration"] { display: none; }
-            [data-testid="stToolbar"] {
-                visibility: visible !important;
-                background: transparent !important;
+            [data-testid="stToolbar"],
+            [data-testid="stDeployButton"],
+            [data-testid="stBaseButton-header"],
+            [data-testid="stStatusWidget"],
+            .stDeployButton,
+            header {
+                display: none !important;
+                visibility: hidden !important;
             }
             [data-testid="collapsedControl"] {
                 display: flex !important;
@@ -76,7 +82,7 @@ def inject_global_styles() -> None:
                 width: 100%;
                 max-width: min(1440px, 100%);
                 box-sizing: border-box;
-                padding: 0.2rem 1.6rem 3rem;
+                padding: 1.1rem 1.6rem 3rem;
             }
 
             [data-testid="stHorizontalBlock"],

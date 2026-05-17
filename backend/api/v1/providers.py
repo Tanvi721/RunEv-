@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend import models
@@ -10,7 +11,19 @@ router = APIRouter(prefix="/providers", tags=["providers"])
 legacy_router = APIRouter(tags=["providers"])
 
 
-def provider_to_response(provider: models.Provider) -> dict:
+def provider_rating_fields(db: Session, provider_id: int) -> dict:
+    average, count = (
+        db.query(func.avg(models.Rating.score), func.count(models.Rating.id))
+        .filter(models.Rating.provider_id == provider_id)
+        .one()
+    )
+    return {
+        "average_rating": round(float(average), 1) if average is not None else None,
+        "rating_count": int(count or 0),
+    }
+
+
+def provider_to_response(provider: models.Provider, db: Session) -> dict:
     return {
         "id": provider.id,
         "user_id": provider.user_id,
@@ -23,6 +36,8 @@ def provider_to_response(provider: models.Provider) -> dict:
         "price_per_kwh": provider.price_per_kwh,
         "driver_name": provider.driver_name,
         "address": provider.address,
+        "phone": provider.user.phone if provider.user else None,
+        **provider_rating_fields(db, provider.id),
     }
 
 
@@ -31,7 +46,7 @@ def get_visible_providers(db: Session = Depends(get_db)):
         models.Provider.current_lat != None,
         models.Provider.current_lng != None,
     ).all()
-    return [provider_to_response(provider) for provider in providers]
+    return [provider_to_response(provider, db) for provider in providers]
 
 
 @router.get("", response_model=list[ProviderResponse])
@@ -67,7 +82,7 @@ def update_provider_profile_data(data: ProviderUpdate, db: Session):
 
     db.commit()
     db.refresh(provider)
-    return provider_to_response(provider)
+    return provider_to_response(provider, db)
 
 
 @router.put("/profile", response_model=ProviderResponse)

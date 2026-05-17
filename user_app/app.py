@@ -28,10 +28,7 @@ from frontend.styles.theme import configure_page, inject_global_styles
 from frontend.utils.live import auto_refresh, push_notification, render_live_notification, toast_for_status
 from utils import api_client
 
-try:
-    from streamlit_geolocation import streamlit_geolocation
-except Exception:
-    streamlit_geolocation = None
+from frontend.components.geolocation import live_location_button
 
 
 configure_page("RunEV - User App", "⚡")
@@ -193,8 +190,55 @@ def create_payment_order(request_id: int) -> dict | None:
             json={"request_id": request_id},
         )
     except api_client.ApiError as exc:
-        st.error(str(exc))
+        st.session_state.payment_gateway_request_id = None
+        st.session_state.payment_gateway_order = None
+        st.error(f"Payment could not be opened: {exc}")
+        if st.button("Back to pending bills", use_container_width=True, key=f"payment_order_error_back_{request_id}"):
+            st.rerun()
         return None
+
+
+def submit_rating(request_id: int, score: int, comment: str | None = None) -> bool:
+    try:
+        api_client.request_json(
+            "POST",
+            "/api/v1/ratings",
+            token=st.session_state.get("jwt_token"),
+            json={"request_id": request_id, "score": score, "comment": comment or None},
+        )
+        st.session_state[f"rating_submitted_{request_id}"] = True
+        push_notification("Thanks for rating your driver", "success")
+        st.rerun()
+        return True
+    except api_client.ApiError as exc:
+        st.error(str(exc))
+        return False
+
+
+def provider_rating_label(provider: dict) -> str:
+    average = provider.get("average_rating")
+    count = int(provider.get("rating_count") or 0)
+    if average is None or count == 0:
+        return "No ratings yet"
+    return f"{float(average):.1f}/5 from {count} rating{'s' if count != 1 else ''}"
+
+
+def render_rating_form(request_status: dict, key_prefix: str) -> None:
+    request_id = request_status.get("id")
+    provider = request_status.get("provider") or {}
+    if not request_id or request_status.get("status") != "completed" or not provider:
+        return
+    if st.session_state.get(f"rating_submitted_{request_id}"):
+        st.success("Your rating has been saved.")
+        return
+
+    st.markdown("#### Rate your charging experience")
+    st.caption(f"{provider.get('driver_name') or 'Driver'} / {provider.get('vehicle_number') or 'Charging van'}")
+    with st.form(f"{key_prefix}_rating_form_{request_id}"):
+        score = st.slider("Rating", min_value=1, max_value=5, value=5, key=f"{key_prefix}_rating_score_{request_id}")
+        comment = st.text_area("Comment", max_chars=1000, key=f"{key_prefix}_rating_comment_{request_id}")
+        if st.form_submit_button("Submit rating", use_container_width=True):
+            submit_rating(request_id, score, comment.strip())
 
 
 def verify_gateway_payment(order: dict) -> bool:
@@ -448,12 +492,13 @@ def render_razorpay_checkout(order: dict, request_status: dict, method: str, sel
 
 def capture_user_location() -> None:
     st.markdown("#### Pickup")
-    if st.button("Use My Live Location", key="capture_user_location_button", use_container_width=True):
-        st.session_state.capture_user_location = True
-
-    if streamlit_geolocation and st.session_state.get("capture_user_location"):
-        location = streamlit_geolocation()
-        if location and location.get("latitude") and location.get("longitude"):
+    location = live_location_button("Use My Live Location", key="capture_user_location")
+    if location and location.get("error"):
+        st.warning(location["error"])
+    elif location and location.get("latitude") and location.get("longitude"):
+        location_key = f"{location.get('latitude')}:{location.get('longitude')}:{location.get('timestamp')}"
+        if st.session_state.get("last_user_location_key") != location_key:
+            st.session_state.last_user_location_key = location_key
             st.session_state.user_lat = float(location["latitude"])
             st.session_state.user_lng = float(location["longitude"])
             st.session_state.user_address = reverse_geocode(
@@ -461,12 +506,8 @@ def capture_user_location() -> None:
                 st.session_state.user_lng,
                 st.session_state.user_address,
             )
-            push_notification("Live pickup location captured", "success")
-            st.session_state.capture_user_location = False
-    elif not streamlit_geolocation:
-        st.info("Install streamlit-geolocation to enable browser live location.")
-    else:
-        st.caption("Tap the live location button to update pickup from this device.")
+            push_notification("Pickup location updated", "success")
+            st.rerun()
 
     st.text_input("Pickup address", key="user_address")
 
@@ -604,6 +645,7 @@ def render_dashboard() -> None:
                 distance = provider.get("distance_km")
                 if distance is not None:
                     st.metric("ETA", f"{estimate_eta_minutes(distance)} min", f"{distance:.2f} km")
+                st.caption(f"Rating: {provider_rating_label(provider)}")
                 st.caption(f"{provider.get('charging_speed')} · {provider.get('connector_types')} · Rs {provider.get('price_per_kwh')}/kWh")
                 if st.button("Request Van ⚡", key=f"request_{provider['id']}", use_container_width=True, disabled=not provider.get("is_available")):
                     create_charge_request(provider["id"])
@@ -618,6 +660,48 @@ def render_payment_selector(request_status: dict, key_prefix: str) -> None:
         st.session_state.payment_gateway_request_id = request_status["id"]
         st.session_state.payment_gateway_order = None
         st.rerun()
+
+
+def render_trip_map_for_status(request_status: dict, provider: dict | None, key: str) -> None:
+    try:
+        render_trip_map(
+            request_status["pickup_lat"],
+            request_status["pickup_lng"],
+            provider,
+            key=key,
+            trip_status=request_status.get("status"),
+        )
+    except TypeError:
+        render_trip_map(
+            request_status["pickup_lat"],
+            request_status["pickup_lng"],
+            provider,
+            key=key,
+        )
+
+
+def render_trip_contacts(request_status: dict, provider: dict | None) -> None:
+    provider = provider or {}
+    driver_phone = provider.get("phone")
+    otp_code = request_status.get("otp_code")
+    st.markdown("#### Driver details")
+    detail_cols = st.columns(3)
+    detail_cols[0].caption("Driver")
+    detail_cols[0].markdown(f"**{safe_text(provider.get('driver_name') or 'Assigned driver')}**")
+    detail_cols[1].caption("Vehicle")
+    detail_cols[1].markdown(f"**{safe_text(provider.get('vehicle_number') or 'Charging van')}**")
+    detail_cols[2].caption("Mobile")
+    if driver_phone:
+        detail_cols[2].markdown(f"**[{safe_text(driver_phone)}](tel:{safe_text(driver_phone)})**")
+    else:
+        detail_cols[2].markdown("**Not added**")
+
+    if otp_code and request_status.get("status") in {"en_route", "accepted", "arrived"}:
+        st.divider()
+        otp_cols = st.columns([0.8, 1.2])
+        otp_cols[0].caption("Trip OTP")
+        otp_cols[0].code(str(otp_code), language=None)
+        otp_cols[1].caption("Share this with the driver only after the van reaches you.")
 
 
 def render_live_trip() -> None:
@@ -655,9 +739,10 @@ def render_live_trip() -> None:
     cols[2].metric("Driver", (provider or {}).get("driver_name") or "Assigned driver")
     cols[3].metric("Vehicle", (provider or {}).get("vehicle_number") or "Charging van")
 
-    col_map, col_info = st.columns([1.6, 1])
-    with col_map:
-        render_trip_map(request_status["pickup_lat"], request_status["pickup_lng"], provider, key=f"live_trip_map_{request_status['id']}")
+    col_details, col_info = st.columns([1.6, 1])
+    with col_details:
+        with st.container(border=True):
+            render_trip_contacts(request_status, provider)
     with col_info:
         st.markdown(f"### Status {status_badge(status, route_label)}", unsafe_allow_html=True)
         if request_status.get("notification_message"):
@@ -675,6 +760,9 @@ def render_live_trip() -> None:
         else:
             st.info(f"Current status: {status.replace('_', ' ').title()}")
 
+    st.markdown("#### Route map")
+    render_trip_map_for_status(request_status, provider, key=f"live_trip_map_{request_status['id']}")
+
 
 def render_payment_gateway() -> None:
     request_id = st.session_state.get("payment_gateway_request_id")
@@ -686,6 +774,10 @@ def render_payment_gateway() -> None:
                 last_paid.get("invoice_id") or "Paid",
                 last_paid.get("order_id"),
             )
+            if last_paid.get("invoice_id"):
+                paid_request = load_request_status(last_paid.get("invoice_id"))
+                if paid_request:
+                    render_rating_form(paid_request, "last_paid")
             col_a, col_b = st.columns(2)
             with col_a:
                 st.download_button(
@@ -724,6 +816,7 @@ def render_payment_gateway() -> None:
         return
     if request_status.get("status") == "completed":
         render_success_screen(amount := float(request_status.get("total_price") or 0), request_id, st.session_state.payment_gateway_order.get("order_id") if st.session_state.get("payment_gateway_order") else None)
+        render_rating_form(request_status, "paid_gateway")
         st.session_state.payment_gateway_request_id = None
         st.session_state.payment_gateway_order = None
         if st.button("Back to dashboard", use_container_width=True, key=f"paid_back_{request_id}"):
@@ -755,7 +848,7 @@ def render_payment_gateway() -> None:
         render_driver_card(provider, eta=request_status.get("estimated_eta_minutes") or "Live")
         render_charging_summary(request_status, provider, amount)
         st.markdown("#### Live route")
-        render_trip_map(request_status["pickup_lat"], request_status["pickup_lng"], provider, key=f"payment_trip_map_{request_status['id']}")
+        render_trip_map_for_status(request_status, provider, key=f"payment_trip_map_{request_status['id']}")
 
     with col_payment:
         st.markdown(
@@ -835,6 +928,9 @@ def render_history() -> None:
             if req.get("status") == "awaiting_payment":
                 with st.expander("Complete payment", expanded=True):
                     render_payment_selector(req, key_prefix=f"history_{req['id']}")
+            elif req.get("status") == "completed":
+                with st.expander("Rate this session", expanded=False):
+                    render_rating_form(req, key_prefix=f"history_{req['id']}")
 
 
 def render_analytics() -> None:

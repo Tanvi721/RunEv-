@@ -12,6 +12,14 @@ def render_driver_card(provider: dict, eta: int | str = "Live") -> None:
     vehicle = provider.get("vehicle_number") or "Charging van"
     speed = provider.get("charging_speed") or "Standard"
     connector = provider.get("connector_types") or "Universal"
+    phone = provider.get("phone") or "Not available"
+    average_rating = provider.get("average_rating")
+    rating_count = int(provider.get("rating_count") or 0)
+    rating_label = (
+        "No ratings yet"
+        if average_rating is None or rating_count == 0
+        else f"{float(average_rating):.1f}/5 from {rating_count} rating{'s' if rating_count != 1 else ''}"
+    )
     initials = "".join(part[:1] for part in driver.split()[:2]).upper() or "EV"
     st.markdown(
         f"""
@@ -20,7 +28,7 @@ def render_driver_card(provider: dict, eta: int | str = "Live") -> None:
                 <div class="runev-avatar">{safe_text(initials)}</div>
                 <div>
                     <div class="runev-driver-name">{safe_text(driver)}</div>
-                    <div class="runev-driver-meta">4.9 rating / {safe_text(vehicle)}</div>
+                    <div class="runev-driver-meta">{safe_text(rating_label)} / {safe_text(vehicle)}</div>
                 </div>
                 {status_badge("online", "Assigned")}
             </div>
@@ -28,6 +36,7 @@ def render_driver_card(provider: dict, eta: int | str = "Live") -> None:
                 <div><span>ETA</span><strong>{safe_text(eta)} min</strong></div>
                 <div><span>Speed</span><strong>{safe_text(speed)}</strong></div>
                 <div><span>Connector</span><strong>{safe_text(connector)}</strong></div>
+                <div><span>Mobile</span><strong>{safe_text(phone)}</strong></div>
             </div>
         </div>
         """,

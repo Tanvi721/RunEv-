@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Index
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 import datetime
 from backend.database import Base
@@ -17,6 +17,7 @@ class User(Base):
     bookings = relationship("Booking", back_populates="user")
     payments = relationship("Payment", back_populates="user")
     provider_profiles = relationship("Provider", back_populates="user")
+    ratings = relationship("Rating", back_populates="user")
 
 class Provider(Base):
     __tablename__ = "providers"
@@ -42,6 +43,7 @@ class Provider(Base):
 
     user = relationship("User", back_populates="provider_profiles")
     accepted_requests = relationship("ServiceRequest", back_populates="provider")
+    ratings = relationship("Rating", back_populates="provider")
 
 class ServiceRequest(Base):
     __tablename__ = "service_requests"
@@ -61,10 +63,13 @@ class ServiceRequest(Base):
     payment_method = Column(String(255), default="CASH") # CASH, CARD, UPI, PAY_LATER
     charged_units_kwh = Column(Float, nullable=True)
     total_price = Column(Float, nullable=True)
+    otp_code = Column(String(10), nullable=True)
+    otp_verified_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="requests")
     provider = relationship("Provider", back_populates="accepted_requests")
     payment = relationship("Payment", back_populates="request", uselist=False)
+    rating = relationship("Rating", back_populates="request", uselist=False)
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -82,6 +87,26 @@ class Payment(Base):
     request = relationship("ServiceRequest", back_populates="payment")
     booking = relationship("Booking", back_populates="payments")
     user = relationship("User", back_populates="payments")
+
+
+class Rating(Base):
+    __tablename__ = "ratings"
+    __table_args__ = (
+        UniqueConstraint("request_id", name="uq_ratings_request_id"),
+        Index("ix_ratings_provider_score", "provider_id", "score"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    request_id = Column(Integer, ForeignKey("service_requests.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    provider_id = Column(Integer, ForeignKey("providers.id"), nullable=False, index=True)
+    score = Column(Integer, nullable=False)
+    comment = Column(String(1000), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+    request = relationship("ServiceRequest", back_populates="rating")
+    user = relationship("User", back_populates="ratings")
+    provider = relationship("Provider", back_populates="ratings")
 
 class Station(Base):
     __tablename__ = "stations"

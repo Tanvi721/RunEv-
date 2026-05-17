@@ -69,13 +69,21 @@ def assign_charge_request(
     return service_request, distance_km, estimate_eta_minutes(distance_km)
 
 
-def request_payload(service_request: models.ServiceRequest) -> dict:
+def request_payload(service_request: models.ServiceRequest, include_otp: bool = False) -> dict:
     provider = service_request.provider
+    user = service_request.user
     distance_km = None
     eta_minutes = None
     provider_payload = None
+    user_payload = None
 
     if provider:
+        rating_count = len(provider.ratings)
+        average_rating = (
+            round(sum(rating.score for rating in provider.ratings) / rating_count, 1)
+            if rating_count
+            else None
+        )
         provider_payload = {
             "id": provider.id,
             "user_id": provider.user_id,
@@ -88,6 +96,9 @@ def request_payload(service_request: models.ServiceRequest) -> dict:
             "price_per_kwh": provider.price_per_kwh,
             "driver_name": provider.driver_name,
             "address": provider.address,
+            "phone": provider.user.phone if provider.user else None,
+            "average_rating": average_rating,
+            "rating_count": rating_count,
         }
         if provider.current_lat is not None and provider.current_lng is not None:
             distance_km = calculate_distance(
@@ -98,9 +109,17 @@ def request_payload(service_request: models.ServiceRequest) -> dict:
             )
             eta_minutes = estimate_eta_minutes(distance_km)
 
+    if user:
+        user_payload = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "phone": user.phone,
+        }
+
     notification_message, route_status_label = trip_message(service_request.status, provider, distance_km, eta_minutes)
 
-    return {
+    payload = {
         "id": service_request.id,
         "user_id": service_request.user_id,
         "provider_id": service_request.provider_id,
@@ -111,12 +130,17 @@ def request_payload(service_request: models.ServiceRequest) -> dict:
         "payment_method": service_request.payment_method,
         "charged_units_kwh": service_request.charged_units_kwh,
         "total_price": service_request.total_price,
+        "otp_verified_at": service_request.otp_verified_at,
         "provider": provider_payload,
+        "user": user_payload,
         "estimated_distance_km": round(distance_km, 2) if distance_km is not None else None,
         "estimated_eta_minutes": eta_minutes,
         "notification_message": notification_message,
         "route_status_label": route_status_label,
     }
+    if include_otp:
+        payload["otp_code"] = service_request.otp_code
+    return payload
 
 
 def trip_message(

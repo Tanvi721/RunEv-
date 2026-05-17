@@ -65,6 +65,8 @@ async def update_provider_location(
         event_type = "request.location_updated"
         if service_request.status in {"accepted", "en_route"} and distance_km <= ARRIVAL_DISTANCE_KM:
             service_request.status = "arrived"
+            provider.current_lat = service_request.pickup_lat
+            provider.current_lng = service_request.pickup_lng
             db.commit()
             db.refresh(service_request)
             event_type = "request.arrived"

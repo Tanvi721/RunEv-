@@ -16,16 +16,12 @@ from backend.database import SessionLocal
 from backend.models import Provider, ServiceRequest, User
 from backend.services.dispatch_service import ACTIVE_TRIP_STATUSES
 from frontend.components.analytics import render_operations_analytics
+from frontend.components.geolocation import live_location_button
 from frontend.components.maps import render_provider_map
-from frontend.components.ui import hero, metric_card, money, status_badge, timeline
+from frontend.components.ui import hero, metric_card, money, safe_text, status_badge, timeline
 from frontend.styles.theme import configure_page, inject_global_styles
 from frontend.utils.live import auto_refresh, push_notification, render_live_notification, toast_for_status
 from utils import api_client
-
-try:
-    from streamlit_geolocation import streamlit_geolocation
-except Exception:
-    streamlit_geolocation = None
 
 
 configure_page("RunEV - Driver Console", "🚐")
@@ -46,7 +42,6 @@ def init_state() -> None:
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
-    st.session_state["_runev_geolocation_rendered"] = False
 
 
 def object_from_dict(data):
@@ -126,6 +121,20 @@ def update_request_status(request_id: int, action: str) -> None:
         st.error(str(exc))
 
 
+def start_charging_with_otp(request_id: int, otp_code: str) -> None:
+    try:
+        api_client.request_json(
+            "POST",
+            f"/api/v1/requests/charge/{request_id}/start-charging",
+            token=st.session_state.get("jwt_token"),
+            json={"otp_code": otp_code.strip()},
+        )
+        push_notification("OTP verified. Charging started", "success")
+        st.rerun()
+    except api_client.ApiError as exc:
+        st.error(str(exc))
+
+
 def submit_charged_units(request_id: int, charged_units_kwh: float) -> None:
     try:
         api_client.request_json(
@@ -156,6 +165,56 @@ def estimate_service_amount(request: ServiceRequest | SimpleNamespace, provider:
     return round(149 + float(distance or 0) * 18 + rate, 2)
 
 
+def provider_rating_stats(provider: Provider | SimpleNamespace | None) -> tuple[float | None, int]:
+    if not provider:
+        return None, 0
+    ratings = getattr(provider, "ratings", None) or []
+    count = len(ratings)
+    if count == 0:
+        return None, 0
+    average = sum(float(rating.score) for rating in ratings) / count
+    return average, count
+
+
+def provider_rating_label(provider: Provider | SimpleNamespace | None) -> str:
+    average, count = provider_rating_stats(provider)
+    if average is None:
+        return "No ratings yet"
+    return f"{average:.1f}/5 from {count} rating{'s' if count != 1 else ''}"
+
+
+def render_provider_rating_card(provider: Provider | SimpleNamespace | None) -> None:
+    average, count = provider_rating_stats(provider)
+    score = average or 0
+    filled_stars = int(round(score))
+    empty_stars = max(0, 5 - filled_stars)
+    stars = "".join('<span class="filled">&#9733;</span>' for _ in range(filled_stars))
+    stars += "".join('<span>&#9733;</span>' for _ in range(empty_stars))
+    score_text = "New" if average is None else f"{average:.1f}"
+    review_text = "No ratings yet" if count == 0 else f"{count} verified rating{'s' if count != 1 else ''}"
+    signal = "New van" if average is None else "Excellent" if average >= 4.5 else "Trusted" if average >= 4 else "Rated"
+    percent = min(100, max(0, (score / 5) * 100))
+    st.markdown(
+        f"""
+        <div class="runev-rating-card">
+            <div class="runev-rating-head">
+                <span>Van Rating</span>
+                <b>{safe_text(signal)}</b>
+            </div>
+            <div class="runev-rating-body">
+                <strong>{safe_text(score_text)}</strong>
+                <div>
+                    <div class="runev-stars">{stars}</div>
+                    <p>{safe_text(review_text)}</p>
+                </div>
+            </div>
+            <div class="runev-rating-track"><span style="width:{percent:.0f}%"></span></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def ensure_provider_role(db, provider: Provider | None) -> None:
     if not provider or st.session_state.user.get("role") in ("provider", "admin"):
         return
@@ -178,13 +237,13 @@ def capture_provider_location(provider: Provider | None = None, key_suffix: str 
         st.session_state[address_key] = provider.address if provider and provider.address else st.session_state.provider_address
 
     capture_key = f"capture_provider_location_{key_suffix}"
-    if st.button("Use My Live Location", key=f"{capture_key}_button", use_container_width=True):
-        st.session_state[capture_key] = True
-
-    if streamlit_geolocation and st.session_state.get(capture_key) and not st.session_state.get("_runev_geolocation_rendered"):
-        st.session_state["_runev_geolocation_rendered"] = True
-        location = streamlit_geolocation()
-        if location and location.get("latitude") and location.get("longitude"):
+    location = live_location_button("Use My Live Location", key=capture_key)
+    if location and location.get("error"):
+        st.warning(location["error"])
+    elif location and location.get("latitude") and location.get("longitude"):
+        location_key = f"{capture_key}:{location.get('latitude')}:{location.get('longitude')}:{location.get('timestamp')}"
+        if st.session_state.get(f"{capture_key}_last_location_key") != location_key:
+            st.session_state[f"{capture_key}_last_location_key"] = location_key
             st.session_state.provider_lat = float(location["latitude"])
             st.session_state.provider_lng = float(location["longitude"])
             st.session_state.provider_address = reverse_geocode(st.session_state.provider_lat, st.session_state.provider_lng, st.session_state.provider_address)
@@ -203,13 +262,9 @@ def capture_provider_location(provider: Provider | None = None, key_suffix: str 
                         },
                     )
                     push_notification("Live van location updated", "success")
-                    st.session_state[capture_key] = False
+                    st.rerun()
                 except api_client.ApiError as exc:
                     st.warning(str(exc))
-    elif not streamlit_geolocation:
-        st.info("Install streamlit-geolocation to enable browser live location.")
-    else:
-        st.caption("Live location permission is active on this page.")
     address = st.text_input("Van live address", key=address_key)
     st.session_state.provider_address = address
     return address
@@ -346,14 +401,18 @@ def render_kpis(providers: list[Provider], pending: list, active: list, all_requ
 
 def render_request_card(req, user: User | None, provider: Provider | None) -> None:
     distance, eta = route_distance_and_eta(provider, req)
+    user_phone = getattr(user, "phone", None) or getattr(getattr(req, "user", None), "phone", None)
     with st.container(border=True):
         col_a, col_b, col_c = st.columns([1.5, 1.1, 0.9])
         with col_a:
             status = getattr(req, "status", "pending")
             label = "In Route" if status in {"accepted", "en_route"} else None
             st.markdown(f"**{user.username if user else 'Customer'}** {status_badge(status, label)}", unsafe_allow_html=True)
+            if user_phone:
+                st.caption(f"Customer mobile: {user_phone}")
             if provider:
                 st.caption(f"Van {provider.vehicle_number}")
+                st.caption(f"Rating: {provider_rating_label(provider)}")
             st.caption(reverse_geocode(req.pickup_lat, req.pickup_lng, "Customer pickup"))
             timeline(getattr(req, "status", "pending"))
         with col_b:
@@ -381,9 +440,10 @@ def render_request_card(req, user: User | None, provider: Provider | None) -> No
                     if st.button("Mark Reached", key=f"arrived_{req.id}", use_container_width=True):
                         update_request_status(req.id, "arrived")
                 elif status == "arrived":
-                    st.info("Customer reached. Start charging when the cable is connected.")
-                    if st.button("Start charging", key=f"start_charging_{req.id}", use_container_width=True):
-                        update_request_status(req.id, "start-charging")
+                    st.info("Ask the customer for the trip OTP before charging.")
+                    otp_code = st.text_input("Customer OTP", max_chars=6, key=f"otp_{req.id}")
+                    if st.button("Verify OTP & start", key=f"start_charging_{req.id}", use_container_width=True, disabled=len(otp_code.strip()) != 6):
+                        start_charging_with_otp(req.id, otp_code)
                 elif status == "charging":
                     st.success("Charging in progress.")
                     units = st.number_input("Units gained (kWh)", min_value=0.0, step=0.5, format="%.2f", key=f"units_{req.id}")
@@ -491,8 +551,10 @@ def render_provider_form(db, existing: Provider | None = None) -> None:
     suffix = f"provider_{existing.id}" if existing else "provider_new"
     st.markdown("#### Van Live Location")
     address = capture_provider_location(existing, suffix)
+    provider_user = existing.user if existing and existing.user else db.query(User).filter(User.id == st.session_state.user["id"]).first()
     with st.form(f"provider_form_{existing.id if existing else 'new'}"):
         driver_name = st.text_input("Driver Name", value=(existing.driver_name if existing else "") or "", key=f"driver_name_{suffix}")
+        driver_mobile = st.text_input("Driver Mobile Number", value=(provider_user.phone if provider_user else "") or "", key=f"driver_mobile_{suffix}")
         vehicle_number = st.text_input("Vehicle Number", value=(existing.vehicle_number if existing else "") or "", key=f"vehicle_number_{suffix}")
         speed_options = ["AC 22kW", "DC 50kW", "DC 150kW"]
         default_speed = speed_options.index(existing.charging_speed) if existing and existing.charging_speed in speed_options else 0
@@ -515,6 +577,8 @@ def render_provider_form(db, existing: Provider | None = None) -> None:
             provider.is_available = is_available
             provider.driver_name = driver_name
             provider.address = address
+            if provider_user:
+                provider_user.phone = driver_mobile.strip() or None
             if uploaded_photo:
                 photo_data = uploaded_photo.read()
                 photo_b64 = base64.b64encode(photo_data).decode()
@@ -550,6 +614,7 @@ def render_drivers() -> None:
                     a.metric("Charging", item.charging_speed or "Standard")
                     b.metric("Connector", item.connector_types or "Universal")
                     c.metric("Rate", f"Rs {float(item.price_per_kwh or 20):.0f}/kWh")
+                    render_provider_rating_card(item)
                     st.caption(item.address or st.session_state.provider_address)
                 with st.expander("Update this van"):
                     render_provider_form(db, item)
@@ -608,6 +673,7 @@ def render_trip_history(db, requests_list: list[ServiceRequest], providers_by_id
             a, b, c = st.columns([1.4, 1, 0.8])
             a.markdown(f"**{user.username if user else 'Customer'}**")
             a.caption(f"Van: {provider.vehicle_number if provider else 'Charging Van'}")
+            a.caption(f"Rating: {provider_rating_label(provider)}")
             b.markdown(status_badge(req.status), unsafe_allow_html=True)
             b.caption(req.request_time.strftime("%d %b %Y, %I:%M %p"))
             c.metric("Amount", money(estimate_service_amount(req, provider)))
