@@ -9,10 +9,11 @@ from types import SimpleNamespace
 
 import requests
 import streamlit as st
+from sqlalchemy.exc import SQLAlchemyError
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.database import SessionLocal
+from backend.database import Base, SessionLocal, engine
 from backend.models import Provider, ServiceRequest, User
 from backend.services.dispatch_service import ACTIVE_TRIP_STATUSES
 from frontend.components.analytics import render_operations_analytics
@@ -28,6 +29,11 @@ configure_page("RunEV - Driver Console", "🚐")
 inject_global_styles()
 
 VISIBLE_ACTIVE_TRIP_STATUSES = tuple(status for status in ACTIVE_TRIP_STATUSES if status != "pending")
+
+
+@st.cache_resource
+def ensure_database_schema() -> None:
+    Base.metadata.create_all(bind=engine)
 
 
 def init_state() -> None:
@@ -701,6 +707,13 @@ def render_settings() -> None:
 
 
 def main() -> None:
+    try:
+        ensure_database_schema()
+    except SQLAlchemyError as exc:
+        print(f"Database setup failed: {exc}")
+        st.error("Database setup failed. Please check the configured DATABASE_URL and redeploy.")
+        st.stop()
+
     init_state()
     render_live_notification()
     if st.session_state.user is None:
