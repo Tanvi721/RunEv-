@@ -46,7 +46,14 @@ def render_driver_card(provider: dict, eta: int | str = "Live") -> None:
 
 def render_charging_summary(request_status: dict, provider: dict, amount: float) -> None:
     units = float(request_status.get("charged_units_kwh") or 0)
-    rate = float(provider.get("price_per_kwh") or 20)
+    breakdown = request_status.get("fare_breakdown") or {}
+    rate = float(breakdown.get("charging_rate_per_kwh") or 20)
+    base_visit_fee = float(breakdown.get("base_visit_fee") or 0)
+    distance_charge = float(breakdown.get("distance_charge") or 0)
+    charging_cost = float(breakdown.get("charging_cost") or 0)
+    platform_fee = float(breakdown.get("platform_fee") or 0)
+    emergency_fee = float(breakdown.get("emergency_fee") or 0)
+    night_fee = float(breakdown.get("night_fee") or 0)
     st.markdown(
         f"""
         <div class="runev-card runev-summary-card">
@@ -61,6 +68,12 @@ def render_charging_summary(request_status: dict, provider: dict, amount: float)
                 <span>{safe_text(provider.get("vehicle_number") or "Charging van")}</span>
                 <strong>{units:.2f} kWh charged successfully</strong>
             </div>
+            <div class="runev-summary-line"><span>Base visit fee</span><strong>{money(base_visit_fee)}</strong></div>
+            <div class="runev-summary-line"><span>Distance charge</span><strong>{money(distance_charge)}</strong></div>
+            <div class="runev-summary-line"><span>Charging cost</span><strong>{money(charging_cost)}</strong></div>
+            <div class="runev-summary-line"><span>Platform fee</span><strong>{money(platform_fee)}</strong></div>
+            <div class="runev-summary-line"><span>Emergency fee</span><strong>{money(emergency_fee)}</strong></div>
+            <div class="runev-summary-line"><span>Night fee</span><strong>{money(night_fee)}</strong></div>
         </div>
         """,
         unsafe_allow_html=True,

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend import models
 from backend.services.geo_service import calculate_distance, estimate_eta_minutes
+from backend.services.pricing_service import request_fare_breakdown
 
 ACTIVE_TRIP_STATUSES = ("pending", "en_route", "accepted", "arrived", "charging", "awaiting_payment")
 ARRIVAL_DISTANCE_KM = 0.2
@@ -135,6 +136,7 @@ def request_payload(service_request: models.ServiceRequest, include_otp: bool = 
         "user": user_payload,
         "estimated_distance_km": round(distance_km, 2) if distance_km is not None else None,
         "estimated_eta_minutes": eta_minutes,
+        "fare_breakdown": request_fare_breakdown(service_request),
         "notification_message": notification_message,
         "route_status_label": route_status_label,
     }

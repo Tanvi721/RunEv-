@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import html
+import json
 import math
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
 
 import requests
+import textwrap
 import streamlit as st
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
@@ -15,6 +19,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from frontend.components.analytics import render_operations_analytics
+from frontend.components.auth import render_auth_divider
+from frontend.components.theme import (
+    apply_theme_runtime,
+    init_theme_state,
+    persist_theme_preference,
+    render_theme_selector,
+    restore_theme_preferences,
+)
 from frontend.components.maps import render_trip_map, render_user_map
 from frontend.components.payment import (
     render_charging_summary,
@@ -25,25 +37,59 @@ from frontend.components.payment import (
 )
 from frontend.components.ui import hero, metric_card, money, safe_text, status_badge, timeline
 from frontend.styles.theme import configure_page, inject_global_styles
+from frontend.utils import supabase_auth
 from frontend.utils.live import auto_refresh, push_notification, render_live_notification, toast_for_status
 from utils import api_client
 
-from frontend.components.geolocation import live_location_button
+from frontend.components.geolocation import live_location_button, validate_coordinates
+from backend.core.validation import normalize_email, password_strength, validate_full_name, validate_password
+
+
+def clean_html(html_str: str) -> str:
+    import re
+    no_comments = re.sub(r"<!--.*?-->", "", html_str, flags=re.DOTALL)
+    return " ".join(no_comments.split())
+
+
+def inject_premium_user_styles() -> None:
+    css_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "styles", "premium_user.css")
+    if os.path.exists(css_path):
+        with open(css_path, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
 configure_page("RunEV - User App", "⚡")
 inject_global_styles()
+inject_premium_user_styles()
+init_theme_state()
+apply_theme_runtime()
 
 ACTIVE_REQUEST_STATUSES = {"pending", "accepted", "en_route", "arrived", "charging", "awaiting_payment"}
+SUPABASE_PKCE_STORAGE_KEY = "runev.supabase.pkce_verifier"
+RUNEV_SESSION_STORAGE_KEY = "runev.user.jwt"
+DEFAULT_PROVIDER_LOCATION = (18.5204, 73.8567)
+LOCAL_TIMEZONE = ZoneInfo("Asia/Kolkata")
+
+
+def is_default_location(latitude: float | None, longitude: float | None) -> bool:
+    if latitude is None or longitude is None:
+        return True
+    try:
+        return round(float(latitude), 4) == 18.5204 and round(float(longitude), 4) == 73.8567
+    except (TypeError, ValueError):
+        return True
 
 
 def init_state() -> None:
     defaults = {
         "user": None,
         "jwt_token": None,
+        "supabase_session": None,
         "user_lat": 18.5204,
         "user_lng": 73.8567,
         "user_address": "Detecting your live pickup location",
+        "user_location_accuracy": None,
+        "user_location_captured": False,
         "active_request_id": None,
         "payment_gateway_request_id": None,
         "payment_gateway_order": None,
@@ -73,7 +119,7 @@ def reverse_geocode(lat: float, lng: float, fallback: str) -> str:
             "https://nominatim.openstreetmap.org/reverse",
             params={"format": "jsonv2", "lat": lat, "lon": lng},
             headers={"User-Agent": "RunEV local development app"},
-            timeout=4,
+            timeout=5,
         )
         if response.status_code == 200:
             return response.json().get("display_name") or fallback
@@ -86,7 +132,10 @@ def format_date(value: str | None) -> str:
     if not value:
         return "Recent"
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00")).strftime("%d %b, %I:%M %p")
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(LOCAL_TIMEZONE).strftime("%d %b, %I:%M %p")
     except ValueError:
         return value
 
@@ -119,10 +168,22 @@ def load_all_providers(user_lat: float | None = None, user_lng: float | None = N
         lat, lng = provider.get("current_lat"), provider.get("current_lng")
         if lat is None or lng is None:
             continue
-        distance = calculate_distance(user_lat, user_lng, lat, lng) if user_lat is not None and user_lng is not None else None
+        try:
+            lat_value, lng_value, _ = validate_coordinates(lat, lng)
+        except ValueError:
+            continue
+        if (
+            round(lat_value, 4) == DEFAULT_PROVIDER_LOCATION[0]
+            and round(lng_value, 4) == DEFAULT_PROVIDER_LOCATION[1]
+            and "pune" not in str(provider.get("address") or "").lower()
+        ):
+            continue
+        distance = calculate_distance(user_lat, user_lng, lat_value, lng_value) if user_lat is not None and user_lng is not None else None
         rows.append(
             {
                 **provider,
+                "current_lat": lat_value,
+                "current_lng": lng_value,
                 "charging_speed": provider.get("charging_speed") or "Standard",
                 "connector_types": provider.get("connector_types") or "Universal",
                 "price_per_kwh": provider.get("price_per_kwh") or 20.0,
@@ -142,6 +203,17 @@ def sync_active_request_from_backend() -> None:
 
 def create_charge_request(provider_id: int | None = None) -> None:
     try:
+        pickup_lat, pickup_lng, _ = validate_coordinates(st.session_state.user_lat, st.session_state.user_lng)
+    except ValueError as exc:
+        st.error(f"Pickup location is invalid: {exc}")
+        return
+    if not st.session_state.get("user_location_captured"):
+        st.error("Please click Use My Live Location and allow location access before requesting a van.")
+        return
+    if is_default_location(pickup_lat, pickup_lng):
+        st.error("Pickup is still set to the default Pune location. Please share your live location again.")
+        return
+    try:
         data = api_client.request_json(
             "POST",
             "/api/v1/requests/charge",
@@ -149,8 +221,8 @@ def create_charge_request(provider_id: int | None = None) -> None:
             json={
                 "user_id": st.session_state.user["id"],
                 "provider_id": provider_id,
-                "pickup_lat": float(st.session_state.user_lat),
-                "pickup_lng": float(st.session_state.user_lng),
+                "pickup_lat": pickup_lat,
+                "pickup_lng": pickup_lng,
             },
         )
         st.session_state.active_request_id = data["request_id"]
@@ -274,7 +346,8 @@ def verify_gateway_payment(order: dict) -> bool:
 
 def render_bill_totals(request_status: dict, provider: dict, amount: float, compact: bool = False) -> None:
     units = float(request_status.get("charged_units_kwh") or 0)
-    rate = float(provider.get("price_per_kwh") or 20)
+    breakdown = request_status.get("fare_breakdown") or {}
+    rate = float(breakdown.get("charging_rate_per_kwh") or provider.get("price_per_kwh") or 20)
     vehicle = html.escape(provider.get("vehicle_number") or "Charging van")
     driver = html.escape(provider.get("driver_name") or "Assigned driver")
     padding = "18px" if compact else "22px"
@@ -305,6 +378,26 @@ def render_bill_totals(request_status: dict, provider: dict, amount: float, comp
                 </div>
             </div>
             <div style="display:grid;gap:12px;">
+                <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
+                    <span style="color:#cbd5e1;font-weight:800;">Base visit</span>
+                    <strong style="color:#f8fafc;text-align:right;">{money(breakdown.get('base_visit_fee') or 0)}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
+                    <span style="color:#cbd5e1;font-weight:800;">Distance</span>
+                    <strong style="color:#f8fafc;text-align:right;">{money(breakdown.get('distance_charge') or 0)}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
+                    <span style="color:#cbd5e1;font-weight:800;">Charging</span>
+                    <strong style="color:#f8fafc;text-align:right;">{money(breakdown.get('charging_cost') or 0)}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
+                    <span style="color:#cbd5e1;font-weight:800;">Platform</span>
+                    <strong style="color:#f8fafc;text-align:right;">{money(breakdown.get('platform_fee') or 0)}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
+                    <span style="color:#cbd5e1;font-weight:800;">Emergency / Night</span>
+                    <strong style="color:#f8fafc;text-align:right;">{money((breakdown.get('emergency_fee') or 0) + (breakdown.get('night_fee') or 0))}</strong>
+                </div>
                 <div style="display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(148,163,184,.14);padding-bottom:10px;">
                     <span style="color:#cbd5e1;font-weight:800;">Driver</span>
                     <strong style="color:#f8fafc;text-align:right;">{driver}</strong>
@@ -492,88 +585,727 @@ def render_razorpay_checkout(order: dict, request_status: dict, method: str, sel
 
 def capture_user_location() -> None:
     st.markdown("#### Pickup")
-    location = live_location_button("Use My Live Location", key="capture_user_location")
-    if location and location.get("error"):
-        st.warning(location["error"])
-    elif location and location.get("latitude") and location.get("longitude"):
-        location_key = f"{location.get('latitude')}:{location.get('longitude')}:{location.get('timestamp')}"
-        if st.session_state.get("last_user_location_key") != location_key:
-            st.session_state.last_user_location_key = location_key
-            st.session_state.user_lat = float(location["latitude"])
-            st.session_state.user_lng = float(location["longitude"])
-            st.session_state.user_address = reverse_geocode(
-                st.session_state.user_lat,
-                st.session_state.user_lng,
-                st.session_state.user_address,
-            )
-            push_notification("Pickup location updated", "success")
-            st.rerun()
+    capture_key = "capture_user_location"
+    if st.session_state.pop("sync_user_address_input", False):
+        st.session_state.user_address_input = st.session_state.user_address
+    else:
+        st.session_state.setdefault("user_address_input", st.session_state.user_address)
+    st.session_state.user_address = st.text_input("Pickup address", key="user_address_input")
 
-    st.text_input("Pickup address", key="user_address")
+    location = live_location_button("Use My Live Location", key=capture_key)
+    if not location:
+        return
+    if location.get("error"):
+        st.warning(str(location["error"]))
+        return
+
+    try:
+        latitude, longitude, accuracy = validate_coordinates(
+            location.get("latitude"),
+            location.get("longitude"),
+            location.get("accuracy"),
+        )
+    except ValueError as exc:
+        st.warning(str(exc))
+        return
+
+    location_key = f"{latitude}:{longitude}:{accuracy}:{location.get('timestamp')}"
+    if st.session_state.get("last_user_location_key") == location_key:
+        return
+
+    st.session_state.last_user_location_key = location_key
+    st.session_state.user_lat = latitude
+    st.session_state.user_lng = longitude
+    st.session_state.user_location_accuracy = accuracy
+    st.session_state.user_location_captured = True
+    fallback_address = f"Live pickup: {latitude:.6f}, {longitude:.6f}"
+    st.session_state.user_address = reverse_geocode(latitude, longitude, fallback_address)
+    st.session_state.sync_user_address_input = True
+    push_notification("Pickup location updated", "success")
+    st.rerun()
+
+
+def complete_login(token: str) -> None:
+    user = api_client.me(token)
+    st.session_state.user = {
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "role": user["role"],
+        "phone": user.get("phone"),
+    }
+    st.session_state.jwt_token = token
+    persist_user_session(token)
+    restore_theme_preferences(token)
+    st.rerun()
+
+
+def persist_user_session(token: str | None = None) -> None:
+    token = token or st.session_state.get("jwt_token")
+    if not token:
+        return
+    components.html(
+        f"""
+        <script>
+        try {{ window.parent.localStorage.setItem({json.dumps(RUNEV_SESSION_STORAGE_KEY)}, {json.dumps(str(token))}); }} catch (_) {{}}
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def recover_user_session() -> None:
+    query_token = st.query_params.get("runev_token")
+    if isinstance(query_token, list):
+        query_token = query_token[0]
+    if query_token:
+        try:
+            clear_auth_query_params()
+            complete_login(str(query_token))
+        except api_client.ApiError:
+            clear_user_session()
+        return
+    components.html(
+        f"""
+        <script>
+        (() => {{
+            const url = new URL(window.parent.location.href);
+            if (url.searchParams.has("runev_token")) return;
+            let token = "";
+            try {{ token = window.parent.localStorage.getItem({json.dumps(RUNEV_SESSION_STORAGE_KEY)}) || ""; }} catch (_) {{}}
+            if (token) {{
+                url.searchParams.set("runev_token", token);
+                window.parent.location.replace(url.toString());
+            }}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def clear_user_session() -> None:
+    st.session_state.user = None
+    st.session_state.jwt_token = None
+    st.session_state.supabase_session = None
+    components.html(
+        f"""
+        <script>
+        try {{ window.parent.localStorage.removeItem({json.dumps(RUNEV_SESSION_STORAGE_KEY)}); }} catch (_) {{}}
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def complete_supabase_login(session: dict) -> None:
+    access_token = session.get("access_token")
+    if not access_token:
+        st.session_state.auth_error = "Supabase did not return a valid session."
+        return
+    token_data = api_client.login_with_supabase(access_token, session.get("refresh_token"))
+    st.session_state.supabase_session = {
+        "access_token": access_token,
+        "refresh_token": session.get("refresh_token"),
+        "expires_at": session.get("expires_at"),
+        "token_type": session.get("token_type"),
+        "provider_token": session.get("provider_token"),
+    }
+    complete_login(token_data["access_token"])
+
+
+def clear_auth_query_params() -> None:
+    try:
+        st.query_params.clear()
+    except Exception:
+        pass
+
+
+def persist_supabase_pkce_verifier(verifier: str | None = None) -> None:
+    verifier = verifier or st.session_state.get("supabase_code_verifier")
+    if not verifier:
+        return
+    components.html(
+        f"""
+        <script>
+        (() => {{
+            try {{
+                window.parent.localStorage.setItem({json.dumps(SUPABASE_PKCE_STORAGE_KEY)}, {json.dumps(str(verifier))});
+            }} catch (_) {{}}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def recover_supabase_pkce_verifier() -> None:
+    components.html(
+        f"""
+        <script>
+        (() => {{
+            const key = {json.dumps(SUPABASE_PKCE_STORAGE_KEY)};
+            const url = new URL(window.parent.location.href);
+            const hasCallback = url.searchParams.has("code") || url.searchParams.has("token_hash");
+            if (!hasCallback || url.searchParams.has("runev_verifier")) {{
+                return;
+            }}
+            let verifier = "";
+            try {{
+                verifier = window.parent.localStorage.getItem(key) || "";
+            }} catch (_) {{}}
+            if (!verifier) {{
+                url.searchParams.set("runev_verifier_missing", "1");
+                window.parent.location.replace(url.toString());
+                return;
+            }}
+            url.searchParams.set("runev_verifier", verifier);
+            window.parent.location.replace(url.toString());
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def clear_supabase_pkce_verifier() -> None:
+    components.html(
+        f"""
+        <script>
+        (() => {{
+            try {{
+                window.parent.localStorage.removeItem({json.dumps(SUPABASE_PKCE_STORAGE_KEY)});
+            }} catch (_) {{}}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def expose_supabase_hash_tokens() -> None:
+    components.html(
+        """
+        <script>
+        (() => {
+            const url = new URL(window.parent.location.href);
+            if (!window.parent.location.hash || url.searchParams.has("supabase_access_token")) return;
+            const hash = new URLSearchParams(window.parent.location.hash.slice(1));
+            const accessToken = hash.get("access_token");
+            if (!accessToken) return;
+            url.hash = "";
+            url.searchParams.set("supabase_access_token", accessToken);
+            url.searchParams.set("supabase_refresh_token", hash.get("refresh_token") || "");
+            url.searchParams.set("supabase_type", hash.get("type") || "");
+            window.parent.location.replace(url.toString());
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def render_supabase_recovery_if_present() -> bool:
+    expose_supabase_hash_tokens()
+    access_token = st.query_params.get("supabase_access_token")
+    recovery_type = st.query_params.get("supabase_type")
+    if isinstance(access_token, list):
+        access_token = access_token[0]
+    if isinstance(recovery_type, list):
+        recovery_type = recovery_type[0]
+    if not access_token or recovery_type != "recovery":
+        return False
+
+    st.markdown('<div class="runev-auth-page"></div>', unsafe_allow_html=True)
+    _, col_form, _ = st.columns([1, 0.62, 1], gap="large")
+    with col_form:
+        st.markdown("### Create New Password")
+        with st.form("supabase_recovery_password_form"):
+            password = st.text_input("New Password", type="password")
+            confirm_password = st.text_input("Confirm Password", type="password")
+            if password:
+                st.caption(f"Password strength: {password_strength(password)}")
+            if st.form_submit_button("Update Password", use_container_width=True):
+                try:
+                    validate_password(password)
+                    if password != confirm_password:
+                        raise ValueError("Confirm password must match password.")
+                    supabase_auth.update_password(str(access_token), password)
+                    clear_auth_query_params()
+                    st.success("Password updated. Sign in with your new password.")
+                except (ValueError, supabase_auth.SupabaseAuthError) as exc:
+                    st.error(str(exc))
+    return True
+
+
+def handle_supabase_auth_callback() -> None:
+    query_params = st.query_params
+    code = query_params.get("code")
+    error = query_params.get("error_description") or query_params.get("error")
+    callback_verifier = query_params.get("runev_verifier")
+    verifier_missing = query_params.get("runev_verifier_missing")
+    if isinstance(code, list):
+        code = code[0]
+    if isinstance(error, list):
+        error = error[0]
+    if isinstance(callback_verifier, list):
+        callback_verifier = callback_verifier[0]
+    if isinstance(verifier_missing, list):
+        verifier_missing = verifier_missing[0]
+
+    if error:
+        st.session_state.auth_error = str(error)
+        clear_auth_query_params()
+        return
+    if not code:
+        return
+
+    code_verifier = st.session_state.get("supabase_code_verifier") or callback_verifier
+    if not code_verifier:
+        if verifier_missing:
+            st.session_state.auth_error = "Sign in expired. Please start again from this tab."
+            st.session_state.auth_loading = None
+            clear_auth_query_params()
+            return
+        st.session_state.auth_loading = "Completing secure sign in..."
+        st.session_state.auth_error = None
+        st.info("Completing secure sign in...")
+        recover_supabase_pkce_verifier()
+        st.stop()
+
+    st.session_state.auth_loading = "Completing secure sign in..."
+    try:
+        session = supabase_auth.exchange_code_for_session(str(code), str(code_verifier))
+        st.session_state.pop("supabase_code_verifier", None)
+        st.session_state.pop("supabase_pending_verifier", None)
+        st.session_state.pop("google_oauth_url", None)
+        st.session_state.pop("auth_error", None)
+        clear_auth_query_params()
+        clear_supabase_pkce_verifier()
+        complete_supabase_login(session)
+    except (supabase_auth.SupabaseAuthError, api_client.ApiError) as exc:
+        st.session_state.auth_error = str(exc)
+        clear_auth_query_params()
+    finally:
+        st.session_state.auth_loading = None
+
+
+def supabase_callback_url(code_verifier: str) -> str:
+    url = urlsplit(supabase_auth.app_url())
+    query = dict(parse_qsl(url.query, keep_blank_values=True))
+    query["runev_verifier"] = code_verifier
+    return urlunsplit((url.scheme, url.netloc, url.path, urlencode(query), url.fragment))
+
+
+def prepare_supabase_google_login() -> str:
+    verifier, challenge = supabase_auth.create_pkce_pair()
+    st.session_state.supabase_code_verifier = verifier
+    persist_supabase_pkce_verifier(verifier)
+    return supabase_auth.google_oauth_url(supabase_callback_url(verifier), challenge)
+
+
+def send_supabase_magic_link(email: str) -> None:
+    verifier, challenge = supabase_auth.create_pkce_pair()
+    st.session_state.supabase_code_verifier = verifier
+    st.session_state.supabase_pending_verifier = verifier
+    supabase_auth.send_magic_link(email, supabase_callback_url(verifier), challenge)
+    st.session_state.auth_email_sent = email
 
 
 def render_login() -> None:
-    hero("RunEV passenger", "On-demand EV charging, at your location", "Request a mobile charging van, track it live, and complete payment in one polished flow.")
-    col_form, col_visual = st.columns([0.9, 1.1])
-    with col_form:
-        tab_login, tab_signup = st.tabs(["Login", "Sign Up"])
-        with tab_login:
-            with st.form("login_form"):
-                email = st.text_input("Email")
-                password = st.text_input("Password", type="password")
-                if st.form_submit_button("Launch RunEV", use_container_width=True):
-                    try:
-                        token_data = api_client.login(email, password)
-                        token = token_data["access_token"]
-                        user = api_client.me(token)
-                        st.session_state.user = {
-                            "id": user["id"],
-                            "username": user["username"],
-                            "email": user["email"],
-                            "role": user["role"],
-                            "phone": user.get("phone"),
-                        }
-                        st.session_state.jwt_token = token
-                        st.rerun()
-                    except api_client.ApiError as exc:
-                        st.error(str(exc))
-        with tab_signup:
-            with st.form("signup_form"):
-                username = st.text_input("Username")
-                email = st.text_input("Email")
-                password = st.text_input("Password", type="password")
-                if st.form_submit_button("Create Account", use_container_width=True):
-                    if not username or not email or not password:
-                        st.error("Please fill all fields.")
-                    elif len(username.strip()) < 2:
-                        st.error("Username must be at least 2 characters.")
-                    elif len(password) < 6:
-                        st.error("Password must be at least 6 characters.")
-                    else:
-                        try:
-                            api_client.register(username.strip(), email.strip(), password, role="user")
-                            st.success("Account created. You can login now.")
-                        except api_client.ApiError as exc:
-                            st.error(str(exc))
-    with col_visual:
-        st.markdown(
-            """
-            <div class="runev-card" style="min-height:360px;display:flex;flex-direction:column;justify-content:space-between">
-                <div>
-                    <span class="runev-badge badge-green">Live network</span>
-                    <h2>Premium charging support for city EV owners</h2>
-                    <p class="runev-subtitle">Smart dispatch, driver visibility, billing, route maps, and future AI ETA architecture are ready inside the app.</p>
-                </div>
-                <div style="font-size:4.5rem;line-height:1">⚡</div>
+    persist_supabase_pkce_verifier(st.session_state.get("supabase_pending_verifier"))
+    if render_supabase_recovery_if_present():
+        return
+    recover_user_session()
+    handle_supabase_auth_callback()
+    if st.session_state.get("auth_loading") == "Opening Google...":
+        st.session_state.auth_loading = None
+    # Read query parameter for forgot password / views
+    auth_view = st.query_params.get("auth_view", "login")
+    
+    # Global Header with runev-auth-page class
+    st.markdown(
+        textwrap.dedent("""
+        <div class="runev-auth-page" style="display:none;"></div>
+        <div class="premium-header brand-header">
+            <div class="logo-container">
+                <div class="runev-logo">RunEV<span>.</span></div>
+                <span class="user-app-badge app-badge">User App</span>
             </div>
-            """,
+            <a href="mailto:support@runev.com" class="help-btn">Need help?</a>
+        </div>
+        """),
+        unsafe_allow_html=True,
+    )
+    
+    # Split Layout columns: 35% Left, 65% Right
+    col_left, col_right = st.columns([0.35, 0.65], gap="large")
+    
+    with col_left:
+        st.markdown(
+            textwrap.dedent("""
+            <div class="small-label">ON-DEMAND EV CHARGING</div>
+            <h1 class="main-title hero-title">Run Out of Charge?<br><span>RunEV Comes To You.</span></h1>
+            <p class="supporting-text">Request a charging van in minutes, track it live, pay securely, and continue your trip without waiting.</p>
+            """),
             unsafe_allow_html=True,
         )
+        
+        # Feature cards
+        st.markdown(
+            textwrap.dedent("""
+            <div class="feature-cards-container">
+                <div class="feature-card green-card">
+                    <div class="feature-icon-wrapper">⚡</div>
+                    <h4 class="feature-title">Fast Response</h4>
+                    <p class="feature-desc">Average arrival under 15 minutes</p>
+                </div>
+                <div class="feature-card blue-card">
+                    <div class="feature-icon-wrapper">📍</div>
+                    <h4 class="feature-title">Live Tracking</h4>
+                    <p class="feature-desc">Track your charging van in real time</p>
+                </div>
+                <div class="feature-card purple-card">
+                    <div class="feature-icon-wrapper">🛡️</div>
+                    <h4 class="feature-title">Secure Payments</h4>
+                    <p class="feature-desc">UPI, Cards, Wallets</p>
+                </div>
+            """),
+            unsafe_allow_html=True,
+        )
+        
+        auth_error = st.session_state.get("auth_error")
+        if isinstance(auth_error, str) and auth_error.startswith("Invalid Supabase anon key"):
+            st.session_state.pop("auth_error", None)
+            auth_error = None
+        auth_loading = st.session_state.get("auth_loading")
+        if auth_loading:
+            st.info(auth_loading)
+        if auth_error:
+            st.error(auth_error)
+            
+        supabase_config_error = supabase_auth.config_error()
+        if supabase_config_error:
+            st.session_state.pop("google_oauth_url", None)
+            st.info("Authentication setup required. Add a valid Supabase public anon key in .env, then restart RunEV.")
+        else:
+            if auth_view == "forgot":
+                # Forgot Password Card
+                st.markdown('<h3 style="margin-top:0; font-size: 22px; font-weight: 800; color: #FFFFFF;">Forgot Password?</h3>', unsafe_allow_html=True)
+                st.markdown('<p class="supporting-text">Enter your email below to receive a password reset link.</p>', unsafe_allow_html=True)
+                
+                with st.form("forgot_password_form"):
+                    forgot_email = st.text_input("Email Address", key="user_forgot_email", placeholder="you@example.com")
+                    
+                    submit_forgot = st.form_submit_button("Send Reset Link", use_container_width=True)
+                    if submit_forgot:
+                        try:
+                            normalized_email = normalize_email(forgot_email)
+                            supabase_auth.send_password_reset(normalized_email, redirect_to=supabase_auth.app_url())
+                            st.success("Password reset link sent. Check your email inbox.")
+                        except (ValueError, supabase_auth.SupabaseAuthError) as exc:
+                            st.error(str(exc))
+                            
+                st.markdown(
+                    textwrap.dedent("""
+                    <div class="bottom-auth-section">
+                        Already have an account? <a href="?auth_view=login" target="_self">Login</a>
+                    </div>
+                    """),
+                    unsafe_allow_html=True,
+                )
+            else:
+                # Regular Auth Container with Tabs
+                pass
+                
+                tab_login, tab_signup, tab_magic = st.tabs(["Login", "Sign Up", "Passwordless Login"])
+                
+                with tab_login:
+                    google_url = st.session_state.get("google_oauth_url") or prepare_supabase_google_login()
+                    st.session_state.google_oauth_url = google_url
+                    st.link_button("Continue with Google", google_url, use_container_width=True, disabled=bool(auth_loading))
+                    
+                    st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
+                    
+                    with st.form("user_password_login_form"):
+                        email = st.text_input("Email Address", key="user_login_email", placeholder="Enter your email")
+                        password = st.text_input("Password", key="user_login_password", type="password", placeholder="Enter your password")
+                        
+                        # Remember me & Forgot Password Row
+                        st.markdown('<div class="remember-forgot-row">', unsafe_allow_html=True)
+                        col_chk, col_lnk = st.columns([1.1, 0.9])
+                        with col_chk:
+                            st.checkbox("Remember me", key="user_remember_me")
+                        with col_lnk:
+                            st.markdown(
+                                textwrap.dedent("""
+                                <div class="forgot-password-btn-wrap" style="text-align: right; width:100%;">
+                                    <a href="?auth_view=forgot" target="_self" style="color: #00E5A8; font-size: 13px; font-weight: 600; text-decoration: none;">Forgot Password?</a>
+                                </div>
+                                """),
+                                unsafe_allow_html=True,
+                            )
+                        st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        submit = st.form_submit_button("Login to RunEV  →", use_container_width=True, disabled=bool(auth_loading))
+                        if submit:
+                            try:
+                                normalized_email = normalize_email(email)
+                                if not password:
+                                    raise ValueError("Enter your password.")
+                                token_data = api_client.login(normalized_email, password)
+                                complete_login(token_data["access_token"])
+                            except (ValueError, api_client.ApiError) as exc:
+                                st.error(str(exc))
+                                
+                    st.markdown(
+                        textwrap.dedent("""
+                        <div class="bottom-auth-section" style="margin-top: 16px; text-align: center;">
+                            <span style="color: #94A3B8; font-size: 14px; display: block; margin-bottom: 4px;">Don't have an account yet?</span>
+                            <a href="?auth_view=signup" target="_self" style="color: #00E5A8; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-block;">Create Free Account →</a>
+                        </div>
+                        """),
+                        unsafe_allow_html=True,
+                    )
+                    
+                with tab_signup:
+                    google_url = st.session_state.get("google_oauth_url") or prepare_supabase_google_login()
+                    st.session_state.google_oauth_url = google_url
+                    st.link_button("Continue with Google", google_url, use_container_width=True, disabled=bool(auth_loading))
+                    
+                    st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
+                    
+                    with st.form("user_signup_form"):
+                        name = st.text_input("Full Name", key="user_signup_name", placeholder="Enter your full name")
+                        email = st.text_input("Email Address", key="user_signup_email", placeholder="Enter your email")
+                        password = st.text_input("Password", key="user_signup_password", type="password", placeholder="Create password")
+                        confirm_password = st.text_input("Confirm Password", key="user_signup_confirm", type="password", placeholder="Confirm password")
+                        
+                        if password:
+                            st.caption(f"Password strength: {password_strength(password)}")
+                            
+                        signup_errors = []
+                        for validator in (
+                            lambda: validate_full_name(name),
+                            lambda: normalize_email(email),
+                            lambda: validate_password(password) if password else (_ for _ in ()).throw(ValueError("Password is required.")),
+                            lambda: None if password == confirm_password else (_ for _ in ()).throw(ValueError("Confirm password must match password.")),
+                        ):
+                            try:
+                                validator()
+                            except ValueError as exc:
+                                signup_errors.append(str(exc))
+                                
+                        for message in signup_errors[:2]:
+                            st.caption(message)
+                            
+                        submit_signup = st.form_submit_button("Create Account", use_container_width=True, disabled=bool(auth_loading))
+                        if submit_signup:
+                            if signup_errors:
+                                st.error(signup_errors[0])
+                            else:
+                                try:
+                                    normalized_name = validate_full_name(name)
+                                    normalized_email = normalize_email(email)
+                                    validate_password(password)
+                                    if password != confirm_password:
+                                        raise ValueError("Confirm password must match password.")
+                                    api_client.register(normalized_name, normalized_email, password, confirm_password=confirm_password)
+                                    token_data = api_client.login(normalized_email, password)
+                                    st.success("Account created.")
+                                    complete_login(token_data["access_token"])
+                                except (ValueError, api_client.ApiError) as exc:
+                                    st.error(str(exc))
+                                    
+                    st.markdown(
+                        textwrap.dedent("""
+                        <div class="bottom-auth-section">
+                            Already have an account? <a href="?auth_view=login" target="_self">Login</a>
+                        </div>
+                        """),
+                        unsafe_allow_html=True,
+                    )
+                    
+                with tab_magic:
+                    st.markdown(
+                        textwrap.dedent("""
+                        <div class="passwordless-helper-text" style="margin-bottom: 12px; padding: 4px 0;">
+                            <strong style="color: #00E5A8; display: block; font-size: 14px; margin-bottom: 4px;">Passwordless Login</strong>
+                            <p style="color: #94A3B8; font-size: 13px; margin: 0; line-height: 1.4;">Enter your email and we'll send a secure sign-in link. No password required.</p>
+                        </div>
+                        """),
+                        unsafe_allow_html=True,
+                    )
+                    with st.form("user_magic_link_form"):
+                        magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="you@example.com")
+                        
+                        magic_submit = st.form_submit_button("Send Sign-in Link", use_container_width=True, disabled=bool(auth_loading))
+                        if magic_submit:
+                            try:
+                                normalized_email = normalize_email(magic_email)
+                                send_supabase_magic_link(normalized_email)
+                                st.success("Sign-in link sent. Open the email on this device to finish signing in.")
+                            except (ValueError, supabase_auth.SupabaseAuthError) as exc:
+                                st.error(str(exc))
+                                
+                    if st.session_state.get("auth_email_sent"):
+                        st.success(f"Sign-in link sent to {st.session_state.auth_email_sent}.")
+                        
+                    st.markdown(
+                        textwrap.dedent("""
+                        <div class="bottom-auth-section" style="margin-top: 16px; text-align: center;">
+                            <span style="color: #94A3B8; font-size: 14px; display: block; margin-bottom: 4px;">Don't have an account yet?</span>
+                            <a href="?auth_view=signup" target="_self" style="color: #00E5A8; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-block;">Create Free Account →</a>
+                        </div>
+                        """),
+                        unsafe_allow_html=True,
+                    )
+                        
+                pass
+        
+    with col_right:
+        # Right panel header
+        st.markdown(
+            textwrap.dedent("""
+            <div class="right-panel-header">
+                <div class="trust-badge">
+                    <span class="trust-badge-icon">✓</span> Trusted by <span>10K+</span> EV owners across India
+                </div>
+                <div class="right-panel-title">Your Charging Van is on the Way</div>
+                <div class="right-panel-subtitle">Reliable. Fast. On-Demand.</div>
+            </div>
+            """),
+            unsafe_allow_html=True,
+        )
+        
+        # Render the large premium EV visual image
+        st.image("user_app/hero_visual.png", use_container_width=True)
+        
+        # Live status dashboard grid
+        dashboard_html = """<div class="dashboard-grid">
+<!-- Live Tracking Card -->
+<div class="dash-card tracking-card text-tracking-card" style="min-height: 120px;">
+<div class="dash-card-header">
+<span>Live Tracking</span>
+<span class="dash-card-icon">📍</span>
+</div>
+<div class="tracking-status-wrap">
+<div class="tracking-status-title">Vehicle En Route</div>
+<div class="tracking-progress-container">
+<div class="tracking-progress-line">
+<span class="tracking-progress-fill"></span>
+</div>
+<div class="tracking-nodes">
+<span class="node active"></span>
+<span class="node animate-pulse"></span>
+<span class="node font-blue"></span>
+</div>
+</div>
+<div class="tracking-details-row">
+<div class="tracking-eta-badge">ETA 12 MIN</div>
+<div class="tracking-dist-lbl">2.4 km away</div>
+</div>
+</div>
+</div>
+<!-- Battery Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Battery Status</span>
+<span class="dash-card-icon">🔋</span>
+</div>
+<div>
+<div class="dash-card-value">18%</div>
+<div class="dash-card-desc">Needs charging soon</div>
+</div>
+</div>
+<!-- Charging Power Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Charging Power</span>
+<span class="dash-card-icon">⚡</span>
+</div>
+<div>
+<div class="dash-card-value">22 kW</div>
+<div class="dash-card-desc">DC Fast Charging</div>
+</div>
+</div>
+<!-- Payment Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Secure Payments</span>
+<span class="dash-card-icon">💳</span>
+</div>
+<div>
+<div class="dash-card-value">Secure Payments</div>
+<div class="dash-card-desc">UPI, Cards, Wallets, Net Banking</div>
+</div>
+</div>
+<!-- Support Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>24/7 Support</span>
+<span class="dash-card-icon">🎧</span>
+</div>
+<div>
+<div class="dash-card-value">24/7 Available</div>
+<div class="dash-card-desc">Chat, Phone, Emergency Assistance</div>
+</div>
+</div>
+</div>"""
+        st.markdown(clean_html(dashboard_html), unsafe_allow_html=True)
+        
+    # Bottom Benefits Bar
+    benefits_html = """<div class="benefits-bar">
+<div class="benefit-item">
+<div class="benefit-icon">⏱️</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Zero Waiting Time</div>
+<div class="benefit-desc">We come to you</div>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">🛡️</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Safe & Reliable</div>
+<div class="benefit-desc">Verified vans & experts</div>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">💸</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Transparent Pricing</div>
+<div class="benefit-desc">No hidden charges</div>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">🌱</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Better For The Planet</div>
+<div class="benefit-desc">Drive clean, stay green</div>
+</div>
+</div>
+</div>"""
+    st.markdown(clean_html(benefits_html), unsafe_allow_html=True)
 
 
 def render_sidebar() -> str:
     with st.sidebar:
-        st.markdown("## RunEV")
+        st.markdown(
+            """
+            <div class="runev-sidebar-brand">
+                <div class="runev-sidebar-logo">RunEV</div>
+                <p class="runev-sidebar-subtitle">Passenger console</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         st.caption(st.session_state.user.get("email"))
         sync_label = "Live Trips" if st.session_state.active_request_id else "Dashboard"
         choices = ["Dashboard", "Live Trips", "Analytics", "Payments", "History", "Settings"]
@@ -601,8 +1333,7 @@ def render_sidebar() -> str:
         if st.button("Refresh", use_container_width=True):
             st.rerun()
         if st.button("Logout", use_container_width=True):
-            st.session_state.user = None
-            st.session_state.jwt_token = None
+            clear_user_session()
             st.session_state.active_request_id = None
             st.rerun()
     return nav
@@ -633,7 +1364,10 @@ def render_dashboard() -> None:
     col_map, col_side = st.columns([1.7, 1])
     with col_map:
         capture_user_location()
-        render_user_map(float(st.session_state.user_lat), float(st.session_state.user_lng), providers, st.session_state.user_address, key="dashboard_user_map")
+        if st.session_state.get("user_location_captured") and not is_default_location(st.session_state.user_lat, st.session_state.user_lng):
+            render_user_map(float(st.session_state.user_lat), float(st.session_state.user_lng), providers, st.session_state.user_address, key="dashboard_user_map")
+        else:
+            st.info("Share your live pickup location to show nearby vans on the map.")
     with col_side:
         st.markdown("#### Vans Around You")
         if not providers:
@@ -663,6 +1397,9 @@ def render_payment_selector(request_status: dict, key_prefix: str) -> None:
 
 
 def render_trip_map_for_status(request_status: dict, provider: dict | None, key: str) -> None:
+    if is_default_location(request_status.get("pickup_lat"), request_status.get("pickup_lng")):
+        st.warning("This request was created with the old default pickup location. Please create a new request after sharing live location.")
+        return
     try:
         render_trip_map(
             request_status["pickup_lat"],
@@ -683,7 +1420,6 @@ def render_trip_map_for_status(request_status: dict, provider: dict | None, key:
 def render_trip_contacts(request_status: dict, provider: dict | None) -> None:
     provider = provider or {}
     driver_phone = provider.get("phone")
-    otp_code = request_status.get("otp_code")
     st.markdown("#### Driver details")
     detail_cols = st.columns(3)
     detail_cols[0].caption("Driver")
@@ -696,12 +1432,13 @@ def render_trip_contacts(request_status: dict, provider: dict | None) -> None:
     else:
         detail_cols[2].markdown("**Not added**")
 
-    if otp_code and request_status.get("status") in {"en_route", "accepted", "arrived"}:
+    if request_status.get("status") in {"en_route", "accepted", "arrived"}:
         st.divider()
-        otp_cols = st.columns([0.8, 1.2])
-        otp_cols[0].caption("Trip OTP")
-        otp_cols[0].code(str(otp_code), language=None)
-        otp_cols[1].caption("Share this with the driver only after the van reaches you.")
+        otp_code = request_status.get("otp_code")
+        if otp_code:
+            st.info(f"Your trip OTP is {otp_code}. Share it with the driver only after the van reaches you.")
+        else:
+            st.info("Your trip OTP is being generated. Refresh this trip status in a moment.")
 
 
 def render_live_trip() -> None:
@@ -951,6 +1688,11 @@ def render_analytics() -> None:
 def render_settings() -> None:
     user = st.session_state.user
     hero("Settings", "Account and preferences", "Manage passenger profile information without changing backend contracts.")
+    st.markdown("#### Theme")
+    mode = render_theme_selector("user_theme_selector")
+    persist_theme_preference(st.session_state.get("jwt_token"), mode)
+    st.caption("Theme preferences are restored from your account and mirrored to browser local storage on this device.")
+    st.divider()
     with st.form("user_profile_form"):
         username = st.text_input("Name", value=user.get("username") or "")
         st.text_input("Email", value=user.get("email") or "", disabled=True)

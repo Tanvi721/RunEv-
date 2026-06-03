@@ -21,6 +21,9 @@ FIELD_LABELS = {
     "password": "Password",
     "username": "Username",
     "vehicle_number": "Vehicle number",
+    "phone": "Phone",
+    "confirm_password": "Confirm password",
+    "otp_code": "OTP",
 }
 
 
@@ -84,6 +87,46 @@ def login(email: str, password: str) -> dict[str, Any]:
     return request_json("POST", "/api/v1/auth/login", json={"email": email, "password": password})
 
 
+def reset_password(email: str, new_password: str) -> dict[str, Any]:
+    return request_json("POST", "/api/v1/auth/password/reset", json={"email": email, "new_password": new_password})
+
+
+def login_with_supabase(access_token: str, refresh_token: str | None = None) -> dict[str, Any]:
+    return request_json(
+        "POST",
+        "/api/v1/auth/supabase/session",
+        json={"access_token": access_token, "refresh_token": refresh_token},
+    )
+
+
+def request_phone_otp(phone: str, username: str | None = None) -> dict[str, Any]:
+    return request_json("POST", "/api/v1/auth/login/phone/request-otp", json={"phone": phone, "username": username})
+
+
+def verify_phone_otp(phone: str, otp_code: str, username: str | None = None) -> dict[str, Any]:
+    return request_json(
+        "POST",
+        "/api/v1/auth/login/phone/verify",
+        json={"phone": phone, "otp_code": otp_code, "username": username},
+    )
+
+
+def request_email_otp(email: str, username: str | None = None, role: str = "user") -> dict[str, Any]:
+    return request_json(
+        "POST",
+        "/api/v1/auth/login/email/request-otp",
+        json={"email": email, "username": username, "role": role},
+    )
+
+
+def verify_email_otp(email: str, otp_code: str, username: str | None = None, role: str = "user") -> dict[str, Any]:
+    return request_json(
+        "POST",
+        "/api/v1/auth/login/email/verify",
+        json={"email": email, "otp_code": otp_code, "username": username, "role": role},
+    )
+
+
 def me(token: str) -> dict[str, Any]:
     return request_json("GET", "/api/v1/auth/me", token=token)
 
@@ -92,7 +135,37 @@ def update_me(token: str, username: str | None = None, phone: str | None = None)
     return request_json("PUT", "/api/v1/auth/me", token=token, json={"username": username, "phone": phone})
 
 
-def register(username: str, email: str, password: str, role: str = "user", vehicle_number: str | None = None):
+def get_preferences(token: str) -> dict[str, Any]:
+    return request_json("GET", "/api/v1/auth/me/preferences", token=token)
+
+
+def update_preferences(token: str, **preferences: Any) -> dict[str, Any]:
+    return request_json("PUT", "/api/v1/auth/me/preferences", token=token, json=preferences)
+
+
+def estimate_price(token: str, pickup_lat: float, pickup_lng: float, provider_id: int | None = None, estimated_energy_kwh: float = 0) -> dict[str, Any]:
+    return request_json(
+        "POST",
+        "/api/v1/pricing/estimate",
+        token=token,
+        json={
+            "pickup_lat": pickup_lat,
+            "pickup_lng": pickup_lng,
+            "provider_id": provider_id,
+            "estimated_energy_kwh": estimated_energy_kwh,
+        },
+    )
+
+
+def register(
+    username: str,
+    email: str,
+    password: str,
+    role: str = "user",
+    vehicle_number: str | None = None,
+    phone: str | None = None,
+    confirm_password: str | None = None,
+):
     return request_json(
         "POST",
         "/api/v1/auth/register",
@@ -100,7 +173,9 @@ def register(username: str, email: str, password: str, role: str = "user", vehic
             "username": username,
             "email": email,
             "password": password,
+            "confirm_password": confirm_password,
             "role": role,
             "vehicle_number": vehicle_number,
+            "phone": phone,
         },
     )

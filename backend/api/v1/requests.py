@@ -17,6 +17,8 @@ from backend.schemas.service_request import (
     ServiceRequestResponse,
 )
 from backend.services.dispatch_service import assign_charge_request, request_payload
+from backend.services.auth_service import send_trip_otp_email
+from backend.services.pricing_service import apply_fare_breakdown, calculate_fare_breakdown, get_pricing_settings, request_fare_breakdown
 from backend.services.realtime_service import manager
 
 router = APIRouter(prefix="/requests", tags=["requests"])
@@ -24,10 +26,21 @@ legacy_router = APIRouter(tags=["requests"])
 OTP_ELIGIBLE_STATUSES = {"accepted", "en_route", "arrived"}
 
 
+def try_send_trip_otp_email(service_request: models.ServiceRequest) -> None:
+    if not service_request.user or not service_request.user.email or not service_request.otp_code:
+        return
+    try:
+        send_trip_otp_email(service_request.user.email, service_request.otp_code)
+    except HTTPException as exc:
+        print(f"RunEV trip OTP email was not sent: {exc.detail}")
+        print(f"RunEV trip OTP for request {service_request.id}: {service_request.otp_code}")
+
+
 def ensure_trip_otp(service_request: models.ServiceRequest, db: Session) -> None:
     if service_request.status in OTP_ELIGIBLE_STATUSES and not service_request.otp_code:
         service_request.otp_code = f"{secrets.randbelow(900000) + 100000}"
         service_request.otp_verified_at = None
+        try_send_trip_otp_email(service_request)
         db.commit()
         db.refresh(service_request)
 
@@ -61,6 +74,7 @@ def request_charge_response(service_request: models.ServiceRequest, distance_km:
         "estimated_distance_km": round(distance_km, 2),
         "estimated_eta_minutes": eta_minutes,
         "estimated_price": service_request.total_price or 0,
+        "fare_breakdown": request_fare_breakdown(service_request),
     }
 
 
@@ -72,6 +86,10 @@ def create_charge_request(request: RequestChargeRequest, db: Session, user_id: O
         pickup_lng=request.pickup_lng,
         provider_id=request.provider_id,
     )
+    breakdown = calculate_fare_breakdown(distance_km, settings=get_pricing_settings(db))
+    apply_fare_breakdown(service_request, breakdown)
+    db.commit()
+    db.refresh(service_request)
     return request_charge_response(service_request, distance_km, eta_minutes)
 
 
@@ -139,10 +157,8 @@ def get_request_charge_v1(
     service_request = load_request_or_404(request_id, db)
     ensure_request_access(service_request, current_user)
     ensure_trip_otp(service_request, db)
-    include_otp = current_user.role in {"admin", "user"} and (
-        current_user.role == "admin" or service_request.user_id == current_user.id
-    )
-    return request_payload(service_request, include_otp=include_otp)
+    show_otp_to_passenger = current_user.role == "user" and service_request.user_id == current_user.id
+    return request_payload(service_request, include_otp=show_otp_to_passenger)
 
 
 @router.get("/mine", response_model=list[ServiceRequestResponse])
@@ -173,6 +189,7 @@ def accept_request(request_id: int, db: Session, provider_user_id: Optional[int]
     service_request.status = "en_route"
     service_request.otp_code = f"{secrets.randbelow(900000) + 100000}"
     service_request.otp_verified_at = None
+    try_send_trip_otp_email(service_request)
     if service_request.provider:
         service_request.provider.is_available = False
     db.commit()
@@ -288,9 +305,30 @@ def submit_charge_units(
     if data.charged_units_kwh <= 0:
         raise HTTPException(status_code=400, detail="Charged units must be greater than zero")
 
-    rate = float(service_request.provider.price_per_kwh or 20.0)
     service_request.charged_units_kwh = round(float(data.charged_units_kwh), 2)
-    service_request.total_price = round(service_request.charged_units_kwh * rate, 2)
+    distance_km = service_request.estimated_distance_km
+    if distance_km is None and service_request.provider.current_lat is not None and service_request.provider.current_lng is not None:
+        from backend.services.geo_service import calculate_distance
+
+        distance_km = calculate_distance(
+            service_request.pickup_lat,
+            service_request.pickup_lng,
+            service_request.provider.current_lat,
+            service_request.provider.current_lng,
+        )
+    settings = get_pricing_settings(db)
+    if data.emergency_fee > float(settings.emergency_fee_limit or 0):
+        raise HTTPException(status_code=400, detail=f"Emergency fee cannot exceed Rs {float(settings.emergency_fee_limit or 0):.2f}")
+    if data.night_fee > float(settings.night_fee_limit or 0):
+        raise HTTPException(status_code=400, detail=f"Night fee cannot exceed Rs {float(settings.night_fee_limit or 0):.2f}")
+    breakdown = calculate_fare_breakdown(
+        distance_km or 0,
+        energy_kwh=service_request.charged_units_kwh,
+        emergency_fee=data.emergency_fee,
+        night_fee=data.night_fee,
+        settings=settings,
+    )
+    apply_fare_breakdown(service_request, breakdown)
     service_request.status = "awaiting_payment"
     db.commit()
     db.refresh(service_request)
