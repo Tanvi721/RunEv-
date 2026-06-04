@@ -984,6 +984,7 @@ def render_login() -> None:
                     <h4 class="feature-title">Secure Payments</h4>
                     <p class="feature-desc">UPI, Cards, Wallets</p>
                 </div>
+            </div>
             """),
             unsafe_allow_html=True,
         )
@@ -1193,7 +1194,7 @@ def render_login() -> None:
         )
         
         # Render the large premium EV visual image
-        st.image("user_app/hero_visual.png")
+        st.image("user_app/hero_visual.png", use_container_width=True)
         
         # Live status dashboard grid
         dashboard_html = """<div class="dashboard-grid">

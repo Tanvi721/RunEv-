@@ -1124,15 +1124,19 @@ div[data-testid="stForm"] button[title*="Password"],
 }
 
 /* 2. Hero Image Height Lock & Streamlit Image Container Style */
-.hero-image, div[data-testid="stImage"] {
+.stApp:has(.runev-auth-page) .hero-image,
+.stApp:has(.runev-auth-page) div[data-testid="stImage"] {
     height: 315px !important;
     max-height: 315px !important;
     overflow: hidden !important;
     border-radius: 24px !important;
 }
-.hero-image img, .right-panel-visual-img.hero-image img, div[data-testid="stImage"] img {
+.stApp:has(.runev-auth-page) .hero-image img,
+.stApp:has(.runev-auth-page) .right-panel-visual-img.hero-image img,
+.stApp:has(.runev-auth-page) div[data-testid="stImage"] img {
     height: 315px !important;
     max-height: 315px !important;
+    width: 100% !important;
     object-fit: cover !important;
     border-radius: 24px !important;
 }
@@ -1160,6 +1164,7 @@ div[data-testid="stForm"] button[title*="Password"],
 }
 
 /* 3b. Glassmorphic styling for Native Tabs & Forms cards */
+.stApp:has(.runev-auth-page) .stTabs,
 .stApp:has(.runev-auth-page) [data-testid="stTabs"],
 .stApp:has(.runev-auth-page) [data-testid="column"]:nth-of-type(1) > div[data-testid="stForm"] {
     background: rgba(15, 23, 42, 0.75) !important;
@@ -1172,6 +1177,7 @@ div[data-testid="stForm"] button[title*="Password"],
     margin-bottom: 24px !important;
 }
 
+.stApp:has(.runev-auth-page) .stTabs div[data-testid="stForm"],
 .stApp:has(.runev-auth-page) [data-testid="stTabs"] div[data-testid="stForm"] {
     background-color: transparent !important;
     border: none !important;
@@ -1381,12 +1387,37 @@ section.main > div {
 }
 
 /* Fix login page top blank space */
-.stApp:has(.runev-auth-page){
-    min-height:auto !important;
+
+.runev-auth-page,
+.runev-driver-auth-page {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
-.stApp:has(.runev-auth-page) .block-container{
-    min-height:auto !important;
-    padding-top:0 !important;
-    margin-top:0 !important;
+.stApp:has(.runev-auth-page) .block-container,
+.stApp:has(.runev-driver-auth-page) .block-container,
+.block-container:has(.runev-auth-page),
+.block-container:has(.runev-driver-auth-page) {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.stApp:has(.runev-auth-page) section.main,
+.stApp:has(.runev-driver-auth-page) section.main,
+.stApp:has(.runev-auth-page) section.main > div,
+.stApp:has(.runev-driver-auth-page) section.main > div,
+.stApp:has(.runev-auth-page) [data-testid="stAppViewContainer"],
+.stApp:has(.runev-driver-auth-page) [data-testid="stAppViewContainer"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.stApp:has(.runev-auth-page),
+.stApp:has(.runev-driver-auth-page) {
+    min-height: auto !important;
+}
+
+.stApp:has(.runev-auth-page) .block-container,
+.stApp:has(.runev-driver-auth-page) .block-container {
+    min-height: auto !important;
 }
