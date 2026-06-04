@@ -1,128 +1,84 @@
-# ⚡ RunEV - On-Demand EV Charging Platform
+# RunEV - On-Demand EV Charging Platform
 
 <div align="center">
 
-![RunEV Banner](https://img.shields.io/badge/RunEV-Mobile%20EV%20Charging-blueviolet?style=for-the-badge)
+![RunEV Banner](https://img.shields.io/badge/RunEV-EV%20Charging-blueviolet?style=for-the-badge)
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square)
-![Streamlit](https://img.shields.io/badge/Streamlit-User%20%2B%20Driver%20Apps-ff4b4b?style=flat-square)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-bb2222?style=flat-square)
-![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=flat-square)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green?style=flat-square)
+![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-red?style=flat-square)
+![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=flat-square)
 ![Razorpay](https://img.shields.io/badge/Razorpay-Payments-02042B?style=flat-square)
-![Pytest](https://img.shields.io/badge/Pytest-Tested-0A9EDC?style=flat-square)
 
-### 🚐 Smart mobile EV charging with live dispatch, trip tracking, OTP verification, billing, payments, ratings, and analytics.
+### Smart mobile EV charging platform with real-time tracking, online payments, and driver dispatch.
 
 </div>
 
 ---
 
-## 🌟 Overview
+# Overview
 
-RunEV is a full-stack platform for mobile EV charging services. Customers can request a charging van at their live location, track the driver, complete payment, download an invoice, and rate the service. Drivers and admins can manage fleet profiles, accept trips, verify trip OTPs, update charging progress, generate bills, and monitor operations.
+RunEV is a full-stack EV charging service platform where users can request mobile EV charging, track charging vans live, make online payments, get charging support at their location, connect with charging providers, and view charging status in real time.
 
-The project is built with FastAPI, Streamlit, SQLAlchemy, Alembic, Supabase integration, Razorpay-ready payments, JWT authentication, live geolocation, custom Streamlit UI components, and Pytest coverage.
-
----
-
-## ✨ Current Project Highlights
-
-- 🚀 FastAPI backend mounted under `/api/v1`.
-- 👤 Customer app entry point: `user_app/app.py`.
-- 🛠️ Driver/admin console entry point: `admin_app/app.py`.
-- 🗄️ SQLite local database with PostgreSQL production support.
-- 🔐 JWT login, email/password auth, phone OTP, email OTP, Supabase session login, profile updates, and saved preferences.
-- 📍 Live browser geolocation for customer pickup and driver van location.
-- 🚐 Provider fleet profiles with vehicle number, connector type, charging speed, driver phone, image, price per kWh, and availability.
-- 🔄 Dispatch lifecycle from request creation to payment completion.
-- 🔢 Trip OTP verification before charging starts.
-- 💰 Fare calculation with base fee, distance fee, charging rate, platform fee, emergency fee, and night fee support.
-- 💳 Razorpay order and verification path with local/demo fallback behavior.
-- 📲 UPI QR and cash payment flows.
-- ⭐ Ratings for completed charging sessions.
-- 📊 Customer and fleet analytics dashboards.
-- ✅ Alembic migrations and focused automated tests.
+The project is built with FastAPI, Streamlit, SQLAlchemy, Supabase integrations, Razorpay payments, JWT authentication, Alembic migrations, and Pytest tests.
 
 ---
 
-## 🎯 Features
+# Features
 
-### 👥 Customer App
+## User Features
 
-- 🔐 Register and log in with email/password.
-- 📱 Login with phone OTP or email OTP.
-- 🟢 Supabase session login support.
-- 💾 Persistent JWT session in browser storage.
-- 📍 Live pickup location capture.
-- 🚐 Nearby charging van discovery.
-- ⚡ Charging request creation.
-- 🧭 Live trip status timeline.
-- 🗺️ Route map, ETA, driver details, and vehicle details.
-- 🔢 Trip OTP display for driver verification.
-- 🧾 Pending bill and payment screen.
-- 💳 UPI QR, cash confirmation, and Razorpay checkout path.
-- 📄 Invoice download after payment.
-- ⭐ Charging history and session rating.
-- 🎨 Account settings and theme preferences.
+- User authentication with JWT
+- Login, signup, and account recovery flows
+- Mobile EV charging requests
+- Live charging status
+- Payment integration
+- User dashboard and history
+- Real-time trip updates
 
-### 🧑‍✈️ Driver/Admin Console
+## Provider Features
 
-- 🔐 Driver/admin login and persistent session.
-- 🚐 Charging van profile creation and editing.
-- 📍 Live driver/van location capture.
-- 🪪 Driver details, mobile number, connector type, charging speed, and pricing controls.
-- 🖼️ Vehicle image upload support.
-- 🟢 Availability management.
-- 📥 Pending request queue.
-- ✅ Trip accept, reject, arrived, OTP verify, start charging, complete charging, and bill generation actions.
-- 🗺️ Live route map for active trips.
-- 📊 Earnings, payments, trip history, ratings, and fleet analytics.
-- 💰 Admin pricing controls for platform-wide fare settings.
-- 🎨 Theme and dashboard appearance preferences.
+- Provider login and fleet registration
+- Charging request acceptance and rejection
+- Vehicle and driver management
+- Dispatch workflow
+- Driver location tracking
+- Billing and trip status updates
 
-### ⚙️ Backend
+## Payment Features
 
-- 🚀 REST API with FastAPI.
-- 🧩 Versioned API routes.
-- 🗄️ SQLAlchemy models and service layer.
-- 🔁 Alembic migrations.
-- 🔐 JWT-protected endpoints.
-- 🧪 Password, phone, vehicle, coordinate, and upload validation.
-- 🔢 OTP request and verification services.
-- 🟢 Supabase auth handoff.
-- 💰 Pricing and dispatch services.
-- 💳 Payment gateway abstraction.
-- ⭐ Ratings and tracking APIs.
-- 🔴 Websocket router for tracking support.
-- ✅ Pytest coverage for auth, payments, ratings, OTP, and core services.
+- Razorpay order creation and verification
+- UPI and cash payment flows
+- Payment status tracking
+- Invoice-style summaries
+
+## Backend Features
+
+- REST API with FastAPI
+- JWT authentication
+- SQLAlchemy models and migrations
+- Versioned API routes
+- Modular services and schemas
+- Focused test coverage for auth, payments, ratings, and OTP flows
 
 ---
 
-## 🧰 Tech Stack
+# Tech Stack
 
 | Technology | Usage |
-| --- | --- |
-| Python 3.11 | Main language |
-| FastAPI | Backend API |
-| Uvicorn | ASGI server |
-| Streamlit | Customer app and driver/admin console |
-| SQLAlchemy | ORM and database models |
-| SQLite | Local development database |
-| PostgreSQL | Production database option |
+|---|---|
+| FastAPI | Backend framework |
+| Streamlit | User and driver apps |
+| SQLAlchemy | ORM |
 | Alembic | Database migrations |
-| Supabase | External auth/session integration |
-| JWT | API session authentication |
-| Twilio Verify | Phone OTP provider option |
-| SMTP | Email OTP delivery option |
-| Razorpay | Payment order and verification integration |
-| Folium / streamlit-folium | Maps |
-| Plotly | Analytics charts |
-| Pytest / HTTPX | Automated tests |
+| Supabase | External auth/database integration |
+| Razorpay | Payments |
+| JWT | Session authentication |
+| Pytest | Automated tests |
+| Render / Fly.io | Deployment targets |
 
 ---
-
-## 📁 Project Structure
+# Project Structure
 
 ```text
 RUNEV/
@@ -130,23 +86,46 @@ RUNEV/
 |   `-- app.py
 |-- backend/
 |   |-- api/
+|   |   |-- v1/
+|   |   |   |-- auth.py
+|   |   |   |-- payments.py
+|   |   |   |-- pricing.py
+|   |   |   |-- providers.py
+|   |   |   |-- ratings.py
+|   |   |   |-- requests.py
+|   |   |   |-- tracking.py
+|   |   |   `-- __init__.py
 |   |   |-- auth.py
-|   |   `-- v1/
-|   |       |-- auth.py
-|   |       |-- payments.py
-|   |       |-- pricing.py
-|   |       |-- providers.py
-|   |       |-- ratings.py
-|   |       |-- requests.py
-|   |       `-- tracking.py
+|   |   `-- __init__.py
 |   |-- core/
 |   |   |-- security.py
-|   |   `-- validation.py
+|   |   |-- validation.py
+|   |   `-- __init__.py
 |   |-- schemas/
+|   |   |-- auth.py
+|   |   |-- payment.py
+|   |   |-- pricing.py
+|   |   |-- provider.py
+|   |   |-- rating.py
+|   |   |-- service_request.py
+|   |   |-- tracking.py
+|   |   `-- __init__.py
 |   |-- services/
+|   |   |-- auth_service.py
+|   |   |-- booking_service.py
+|   |   |-- dispatch_service.py
+|   |   |-- geo_service.py
+|   |   |-- payment_gateway.py
+|   |   |-- payment_service.py
+|   |   |-- pricing_service.py
+|   |   |-- realtime_service.py
+|   |   |-- recommendation_service.py
+|   |   `-- station_service.py
 |   |-- database.py
 |   |-- main.py
-|   `-- models.py
+|   |-- models.py
+|   |-- requirements.txt
+|   `-- runtime.txt
 |-- frontend/
 |   |-- components/
 |   |   |-- geolocation_component/
@@ -157,20 +136,25 @@ RUNEV/
 |   |   |-- maps.py
 |   |   |-- payment.py
 |   |   |-- theme.py
-|   |   `-- ui.py
+|   |   |-- ui.py
+|   |   `-- __init__.py
 |   |-- styles/
-|   |   |-- premium_user.css
-|   |   `-- theme.py
-|   `-- utils/
-|       |-- live.py
-|       `-- supabase_auth.py
+|   |   |-- theme.py
+|   |   `-- __init__.py
+|   |-- utils/
+|   |   |-- live.py
+|   |   |-- supabase_auth.py
+|   |   `-- __init__.py
+|   `-- __init__.py
 |-- migrations/
 |   |-- versions/
 |   |   |-- 0001_initial_schema.py
 |   |   |-- 0002_add_ratings.py
 |   |   |-- 0003_add_request_otp.py
 |   |   `-- 0004_add_user_preferences.py
-|   `-- 20260601_auth_security_upgrade.sql
+|   |-- 20260601_auth_security_upgrade.sql
+|   |-- env.py
+|   `-- script.py.mako
 |-- tests/
 |   |-- test_auth_login_options.py
 |   |-- test_core_services.py
@@ -183,264 +167,242 @@ RUNEV/
 |   |-- api_client.py
 |   |-- distance.py
 |   `-- otp.py
+|-- .dockerignore
 |-- .env.example
+|-- .gitignore
+|-- alembic.ini
 |-- Dockerfile
 |-- init_db.py
+|-- PRODUCTION_NEXT_STEPS.md
+|-- pytest.ini
+|-- README.md
 |-- requirements.txt
+|-- runtime.txt
 |-- run_all.bat
-|-- run_silently.vbs
 `-- stop_all.bat
 ```
 
-Local and generated files such as `.env`, `.git/`, `.pytest_cache/`, `.run_logs/`, `__pycache__/`, and `runev.db` are intentionally excluded from the tree above.
+Local-only and generated folders such as `.git/`, `.pytest_cache/`, `.run_logs/`, `__pycache__/`, `.env`, and `runev.db` are intentionally excluded from the tree above.
 
 ---
 
-## ⚙️ Installation
+# ⚙️ Installation
 
-### 1️⃣ Clone Repository
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/Tanvi721/RunEv-.git
 cd RunEv-
 ```
 
-### 2️⃣ Create Virtual Environment
+---
 
-```powershell
-python -m venv venv
-venv\Scripts\activate
-```
+# 🔧 Backend Setup
 
-Linux / macOS:
+## Create Virtual Environment
 
 ```bash
 python -m venv venv
+```
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux / Mac
+
+```bash
 source venv/bin/activate
 ```
 
-### 3️⃣ Install Dependencies
+---
 
-```powershell
-pip install -r requirements.txt
+## Install Dependencies
+
+```bash
+pip install -r backend/requirements.txt
 ```
 
-### 4️⃣ Configure Environment
+---
 
-```powershell
-copy .env.example .env
-```
+# 🗄️ Database Setup
 
-Update `.env` with your local or production values.
+Create `.env` file inside backend folder:
 
 ```env
-DATABASE_URL=sqlite:///./runev.db
-JWT_SECRET=super_secret_jwt_key_change_in_production
-RUNEV_API_BASE_URL=http://127.0.0.1:8000
-RUNEV_USER_APP_URL=http://localhost:8501
+DATABASE_URL=postgresql://postgres:PASSWORD@HOST:5432/postgres
 
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your_supabase_anon_key
+JWT_SECRET=your_secret_key
 
+RAZORPAY_KEY_ID=your_key
+
+RAZORPAY_KEY_SECRET=your_secret
+
+# Real-time phone OTP with Twilio Verify
 PHONE_OTP_PROVIDER=twilio
 DEFAULT_PHONE_COUNTRY_CODE=+91
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_VERIFY_CHANNEL=sms
-
-EMAIL_OTP_PROVIDER=smtp
-EMAIL_OTP_TTL_SECONDS=300
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your_email@gmail.com
-SMTP_PASSWORD=your_gmail_app_password
-SMTP_FROM=your_email@gmail.com
-SMTP_USE_TLS=true
-
-RAZORPAY_KEY_ID=rzp_test_yourkeyid
-RAZORPAY_KEY_SECRET=your_razorpay_secret
-```
-
-### 5️⃣ Initialize Database
-
-Quick SQLite setup:
-
-```powershell
-python init_db.py
-```
-
-Alembic migration setup:
-
-```powershell
-alembic upgrade head
 ```
 
 ---
 
-## ▶️ Run Locally
+# ▶️ Run Backend
 
-### 🚀 Start Backend
-
-```powershell
-uvicorn backend.main:app --reload
+```bash
+cd backend
+uvicorn main:app --reload
 ```
 
-Backend:
+Backend will run at:
 
-```text
+```bash
 http://127.0.0.1:8000
 ```
 
-API docs:
+---
 
-```text
-http://127.0.0.1:8000/docs
+# 🎨 Frontend Setup
+
+## Install Frontend Dependencies
+
+```bash
+pip install -r requirements.txt
 ```
 
-### 👤 Start Customer App
+---
 
-```powershell
-streamlit run user_app/app.py
+## Run Streamlit App
+
+```bash
+streamlit run streamlit_app.py
 ```
 
-Customer app:
+Frontend will run at:
 
-```text
+```bash
 http://localhost:8501
 ```
 
-### 🧑‍✈️ Start Driver/Admin Console
-
-```powershell
-streamlit run admin_app/app.py --server.port 8502
-```
-
-Driver/admin console:
-
-```text
-http://localhost:8502
-```
-
-Windows helpers:
-
-```powershell
-run_all.bat
-stop_all.bat
-```
-
 ---
 
-## 🔌 API Overview
+# 🌐 Deployment
 
-| Area | Routes |
-| --- | --- |
-| Health | `GET /` |
-| Auth | `/api/v1/auth/*` |
-| Requests | `/api/v1/requests/*` |
-| Providers | `/api/v1/providers/*` |
-| Payments | `/api/v1/payments/*` |
-| Pricing | `/api/v1/pricing/*` |
-| Ratings | `/api/v1/ratings/*` |
-| Tracking | `/api/v1/tracking/*` |
+## Backend Deployment (Render / Fly.io)
 
-For exact schemas, see `backend/schemas/`. For route behavior, see `backend/api/v1/`.
-
----
-
-## 🧪 Testing
-
-Run the full test suite:
-
-```powershell
-pytest
-```
-
-Run one test file:
-
-```powershell
-pytest tests/test_payment_gateway.py
-```
-
-Current test coverage includes:
-
-- 🔐 Auth login options and OTP flows.
-- ⚙️ Core service behavior.
-- 💳 Payment gateway behavior.
-- ⭐ Ratings API behavior.
-- 🔢 Request OTP API behavior.
-
----
-
-## 🌐 Deployment
-
-### 🚀 Backend
-
-Example production command:
+### Start Command
 
 ```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 10000
+uvicorn main:app --host 0.0.0.0 --port 10000
 ```
 
-Production checklist:
+### Python Version
 
-- 🗄️ Use PostgreSQL through `DATABASE_URL`.
-- 🔐 Set a strong `JWT_SECRET`.
-- 🟢 Configure Supabase redirect URLs.
-- 📱 Configure Twilio Verify for phone OTP.
-- 📧 Configure SMTP for email OTP.
-- 💳 Configure Razorpay test or live credentials.
-- 🔁 Run Alembic migrations.
-- 🙈 Keep `.env` and secrets out of git.
-
-### 🎨 Streamlit Apps
-
-Deploy the two apps as separate services when possible:
-
-- Customer app: `user_app/app.py`
-- Driver/admin console: `admin_app/app.py`
-
-Set `RUNEV_API_BASE_URL` to the deployed backend URL.
+```txt
+python-3.11.9
+```
 
 ---
 
-## 🛠️ Development Notes
+## Frontend Deployment (Streamlit Cloud)
 
-- 🚀 `backend/main.py` creates the FastAPI app and mounts all routers.
-- 🔌 `utils/api_client.py` centralizes Streamlit-to-backend calls.
-- 🧩 `frontend/components/` stores shared UI, payment, auth, maps, analytics, and geolocation helpers.
-- 🎨 `frontend/styles/theme.py` and `frontend/styles/premium_user.css` define the app styling.
-- 🧪 `backend/core/validation.py` contains input validation and normalization.
-- 💰 `backend/services/pricing_service.py` handles fare calculation.
-- 🔄 `backend/services/dispatch_service.py` handles trip status behavior.
-- 💳 `backend/services/payment_gateway.py` handles Razorpay/mock payment behavior.
+Update API URL:
 
----
+```python
+API_BASE_URL = "https://your-backend-url.onrender.com"
+```
 
-## 🚀 Future Improvements
+Deploy using:
 
-- 🔴 Production websocket trip updates in the Streamlit apps.
-- 💳 Payment webhook handling.
-- 🔔 Push notifications.
-- 🛡️ Stronger role-based admin controls.
-- 🧠 Driver ETA prediction.
-- 📈 Demand forecasting and charging intelligence.
-- ✅ More end-to-end request-to-payment tests.
-- 📱 Mobile-first deployment polish.
+- Streamlit Community Cloud
 
 ---
 
-## 👩‍💻 Author
+# 🔐 Authentication APIs
 
-### Tanvi Barve
+## Register
 
-MCA Student • Python Developer • AI and Full Stack Enthusiast
+```http
+POST /register
+```
 
-GitHub: https://github.com/Tanvi721
+## Login
+
+```http
+POST /login
+```
+
+## Current User
+
+```http
+GET /me
+```
 
 ---
 
-## 📜 License
+# 💳 Payment APIs
+
+- Create Payment Order
+- Verify Payment
+- UPI Integration
+- Razorpay Checkout
+
+---
+
+# 📸 Screenshots
+
+## User Dashboard
+
+- Modern dark UI
+- EV request flow
+- Real-time tracking
+
+## Provider Console
+
+- Charging dispatch management
+- Request handling
+- Live status updates
+
+---
+
+# 🚀 Future Improvements
+
+- AI-based charging prediction
+- Google Maps integration
+- Driver ETA prediction
+- Push notifications
+- Multi-provider system
+- Advanced analytics dashboard
+
+---
+
+# 👩💻 Author
+
+## Tanvi Barve
+
+MCA Student • Python Developer • AI & Full Stack Enthusiast
+
+GitHub:
+
+https://github.com/Tanvi721
+
+---
+
+# ⭐ Support
+
+If you like this project:
+
+- ⭐ Star the repository
+- 🍴 Fork the project
+- 🚀 Contribute improvements
+
+---
+
+# 📜 License
 
 This project is licensed under the MIT License.
 
@@ -448,6 +410,6 @@ This project is licensed under the MIT License.
 
 <div align="center">
 
-## ⚡ RunEV - Charging the Future Anywhere
+## ⚡ RunEV — Charging the Future Anywhere
 
 </div>

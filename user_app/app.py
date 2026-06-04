@@ -1002,7 +1002,7 @@ def render_login() -> None:
                 st.markdown('<p class="supporting-text">Enter your email below to receive a password reset link.</p>', unsafe_allow_html=True)
                 
                 with st.form("forgot_password_form"):
-                    forgot_email = st.text_input("Email Address", key="user_forgot_email", placeholder="you@example.com")
+                    forgot_email = st.text_input("Email Address", key="user_forgot_email", placeholder="Enter your email")
                     
                     submit_forgot = st.form_submit_button("Send Reset Link", use_container_width=True)
                     if submit_forgot:
@@ -1144,7 +1144,7 @@ def render_login() -> None:
                         unsafe_allow_html=True,
                     )
                     with st.form("user_magic_link_form"):
-                        magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="you@example.com")
+                        magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="Enter your email")
                         
                         magic_submit = st.form_submit_button("Send Sign-in Link", use_container_width=True, disabled=bool(auth_loading))
                         if magic_submit:

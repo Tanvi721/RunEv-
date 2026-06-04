@@ -30,30 +30,43 @@ header, [data-testid="stHeader"], [data-testid="stDecoration"] {
 }
 
 @media (min-width: 992px) {
-    html, body, .stApp, [data-testid="stAppViewContainer"], section.main, .main {
-        overflow: hidden !important;
-        height: 100vh !important;
+    html:has(.runev-auth-page), body:has(.runev-auth-page),
+    html:has(.runev-driver-auth-page), body:has(.runev-driver-auth-page),
+    .stApp:has(.runev-auth-page), .stApp:has(.runev-driver-auth-page),
+    .stApp:has(.runev-auth-page) [data-testid="stAppViewContainer"],
+    .stApp:has(.runev-driver-auth-page) [data-testid="stAppViewContainer"],
+    .stApp:has(.runev-auth-page) section.main,
+    .stApp:has(.runev-driver-auth-page) section.main,
+    .stApp:has(.runev-auth-page) .main,
+    .stApp:has(.runev-driver-auth-page) .main {
+        overflow-y: auto !important;
+        min-height: 100vh !important;
+        height: auto !important;
+    }
+    .stApp:has(.runev-auth-page) .block-container,
+    .stApp:has(.runev-driver-auth-page) .block-container {
+        min-height: 100vh !important;
+        height: auto !important;
+        overflow-y: auto !important;
     }
     .block-container {
-        height: 100vh !important;
         padding-top: 0 !important;
         padding-bottom: 0.5rem !important;
         max-width: 1600px !important;
         box-sizing: border-box !important;
-        overflow: hidden !important;
     }
     /* Restrict columns in the split layout to 100vh minus spacing for header and benefits bar */
     .stApp:has(.runev-auth-page) [data-testid="column"]:nth-of-type(1) {
-        max-height: calc(100vh - 130px) !important;
-        overflow-y: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
         padding-right: 8px !important;
         display: flex !important;
         flex-direction: column !important;
         gap: 10px !important;
     }
     .stApp:has(.runev-auth-page) [data-testid="column"]:nth-of-type(2) {
-        max-height: calc(100vh - 130px) !important;
-        overflow: hidden !important;
+        max-height: none !important;
+        overflow: visible !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
@@ -401,6 +414,7 @@ div.stMarkdown p.supporting-text,
     background-color: #1A2238 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 12px !important;
+    height: 48px !important;
     transition: all 0.2s !important;
 }
 
@@ -421,23 +435,19 @@ div.stMarkdown p.supporting-text,
     border: none !important;
     box-shadow: none !important;
     color: #FFFFFF !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-left: 42px !important;
-    padding-right: 14px !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     font-size: 14px !important;
-    height: 40px !important;
-    line-height: 40px !important;
+    height: 48px !important;
+    padding: 4px 10px 4px 42px !important;
+    line-height: 48px !important;
 }
 
 .stApp:has(.runev-auth-page) div[data-testid="stTextInput"] input::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.65) !important;
 }
 
-.stApp:has(.runev-auth-page) div[data-testid="stTextInput"] input:hover {
-    border-color: transparent !important;
-}
-
+.stApp:has(.runev-auth-page) div[data-testid="stTextInput"] input:hover,
 .stApp:has(.runev-auth-page) div[data-testid="stTextInput"] input:focus {
     border-color: transparent !important;
     box-shadow: none !important;

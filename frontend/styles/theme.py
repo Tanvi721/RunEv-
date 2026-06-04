@@ -462,14 +462,15 @@ def inject_global_styles() -> None:
 
             .block-container:has(.runev-auth-page) {
                 width: 100%;
-                height: 100vh;
+                height: auto;
+                min-height: 100vh;
                 max-width: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 padding: 0;
-                overflow: hidden;
+                overflow: auto;
             }
 
             .block-container:has(.runev-auth-page) [data-testid="stHorizontalBlock"] {
@@ -760,14 +761,15 @@ def inject_global_styles() -> None:
 
             .block-container:has(.runev-driver-auth-page) {
                 width: 100%;
-                height: 100vh;
+                height: auto;
+                min-height: 100vh;
                 max-width: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 padding: 0;
-                overflow: hidden;
+                overflow: auto;
             }
 
             .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
@@ -2385,7 +2387,7 @@ def inject_global_styles() -> None:
                 height: auto !important;
                 justify-content: center !important;
                 padding: clamp(0.9rem, 1.6vw, 1.25rem) !important;
-                overflow: hidden !important;
+                overflow: auto !important;
             }
 
             .block-container:has(.runev-auth-page) [data-testid="stVerticalBlock"],
@@ -2789,13 +2791,13 @@ def inject_global_styles() -> None:
                 width: 100% !important;
                 max-width: none !important;
                 min-height: 100svh !important;
-                height: 100svh !important;
+                height: auto !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: flex-start !important;
                 align-items: stretch !important;
                 padding: clamp(1rem, 2vw, 2.35rem) clamp(1rem, 2vw, 2.35rem) 0.75rem !important;
-                overflow: hidden !important;
+                overflow: auto !important;
                 box-sizing: border-box !important;
             }
 
@@ -2854,7 +2856,7 @@ def inject_global_styles() -> None:
             .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
                 width: 100% !important;
                 max-width: none !important;
-                height: min(560px, calc(100svh - 250px)) !important;
+                height: auto !important;
                 min-height: 0 !important;
                 align-items: stretch !important;
                 gap: clamp(1rem, 1.35vw, 1.55rem) !important;
@@ -2884,7 +2886,7 @@ def inject_global_styles() -> None:
                 background: transparent !important;
                 border: 0 !important;
                 box-shadow: none !important;
-                overflow: hidden !important;
+                overflow: visible !important;
             }
 
             .runev-auth-card-copy,
@@ -3116,10 +3118,10 @@ def inject_global_styles() -> None:
             .block-container:has(.runev-driver-auth-page) {
                 width: 100% !important;
                 max-width: none !important;
-                height: 100svh !important;
+                height: auto !important;
                 min-height: 100svh !important;
                 padding: 3.2rem 2.25rem 0.5rem !important;
-                overflow: hidden !important;
+                overflow: auto !important;
                 display: block !important;
             }
 
@@ -3189,7 +3191,7 @@ def inject_global_styles() -> None:
             .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
                 width: 100% !important;
                 max-width: none !important;
-                height: calc(100svh - 292px) !important;
+                height: auto !important;
                 min-height: 0 !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -3410,7 +3412,7 @@ def inject_global_styles() -> None:
 
                 .block-container:has(.runev-auth-page) [data-testid="stHorizontalBlock"],
                 .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
-                    height: calc(100svh - 280px) !important;
+                    height: auto !important;
                 }
 
                 .runev-auth-heading h1,
@@ -3428,7 +3430,7 @@ def inject_global_styles() -> None:
             .block-container:has(.runev-auth-page),
             .block-container:has(.runev-driver-auth-page) {
                 padding: 3.05rem 2rem 0 !important;
-                overflow: hidden !important;
+                overflow: auto !important;
             }
 
             .runev-auth-heading,
@@ -3441,8 +3443,8 @@ def inject_global_styles() -> None:
 
             .block-container:has(.runev-auth-page) [data-testid="stHorizontalBlock"],
             .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
-                height: calc(100svh - 275px) !important;
-                max-height: calc(100svh - 275px) !important;
+                height: auto !important;
+                max-height: none !important;
                 gap: 1.55rem !important;
             }
 
@@ -3557,8 +3559,8 @@ def inject_global_styles() -> None:
 
             .block-container:has(.runev-auth-page) [data-testid="stHorizontalBlock"],
             .block-container:has(.runev-driver-auth-page) [data-testid="stHorizontalBlock"] {
-                height: calc(100svh - 225px) !important;
-                max-height: calc(100svh - 225px) !important;
+                height: auto !important;
+                max-height: none !important;
             }
 
             .block-container:has(.runev-auth-page) [data-testid="stLinkButton"] {
@@ -3623,10 +3625,10 @@ def inject_global_styles() -> None:
             .block-container:has(.runev-driver-auth-page) {
                 width: 100% !important;
                 max-width: none !important;
-                height: 100vh !important;
+                height: auto !important;
                 min-height: 100vh !important;
                 padding: 0 !important;
-                overflow: hidden !important;
+                overflow: auto !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -3644,7 +3646,7 @@ def inject_global_styles() -> None:
                 width: min(460px, calc(100vw - 2rem)) !important;
                 max-width: 460px !important;
                 height: auto !important;
-                max-height: calc(100vh - 2rem) !important;
+                max-height: none !important;
                 margin: 0 auto !important;
                 display: flex !important;
                 gap: 0 !important;
