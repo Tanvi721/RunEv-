@@ -1188,7 +1188,7 @@ def render_login() -> None:
         """), unsafe_allow_html=True)
         
         # Render static illustration image
-        st.image("admin_app/fleet_visual.png", use_container_width=True)
+        st.image("admin_app/fleet_visual.png", width=1000)
         
         st.markdown(clean_html("""
         <div class="fleet-metrics-grid">

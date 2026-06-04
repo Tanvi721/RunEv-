@@ -1186,7 +1186,7 @@ def render_login() -> None:
         )
         
         # Render the large premium EV visual image
-        st.image("user_app/hero_visual.png", use_container_width=True)
+        st.image("user_app/hero_visual.png")
         
         # Live status dashboard grid
         dashboard_html = """<div class="dashboard-grid">
