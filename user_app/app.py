@@ -947,6 +947,13 @@ def render_login() -> None:
     
     # Split Layout columns: 35% Left, 65% Right
     col_left, col_right = st.columns([0.35, 0.65], gap="large")
+    st.markdown("""
+<style>
+.block-container{
+    padding-top:0rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
     
     with col_left:
         st.markdown(

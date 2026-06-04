@@ -21,7 +21,7 @@ from backend.core.validation import (
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_jwt_key_change_in_production")
+JWT_SECRET = os.getenv("JWT_SECRET", "b42312bbd986cdf6e901a5c82fdf6d1165287948dfea21fdabc90e17f35ef2c7")
 ALGORITHM = "HS256"
 PHONE_OTP_TTL_SECONDS = int(os.getenv("PHONE_OTP_TTL_SECONDS", "300"))
 PHONE_OTP_DEV_MODE = os.getenv("PHONE_OTP_DEV_MODE", "true").lower() in {"1", "true", "yes", "on"}

@@ -45,10 +45,10 @@ header, [data-testid="stHeader"], [data-testid="stDecoration"] {
     }
     .stApp:has(.runev-auth-page) .block-container,
     .stApp:has(.runev-driver-auth-page) .block-container {
-        min-height: 100vh !important;
-        height: auto !important;
-        overflow-y: auto !important;
-    }
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+}
     .block-container {
         padding-top: 0 !important;
         padding-bottom: 0.5rem !important;
@@ -1366,3 +1366,27 @@ div.stMarkdown .feature-card p,
     color: #94A3B8 !important;
 }
 
+.runev-auth-page {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.block-container {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+section.main > div {
+    padding-top: 0 !important;
+}
+
+/* Fix login page top blank space */
+.stApp:has(.runev-auth-page){
+    min-height:auto !important;
+}
+
+.stApp:has(.runev-auth-page) .block-container{
+    min-height:auto !important;
+    padding-top:0 !important;
+    margin-top:0 !important;
+}
