@@ -86,14 +86,14 @@ def inject_global_styles() -> None:
                 overflow-x: hidden;
             }
 
-            body, .stApp {
+            body, .stApp, [data-testid="stAppViewContainer"], section.main, .main {
                 background:
                     linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92)),
                     radial-gradient(circle at 16% 10%, rgba(0, 229, 168, 0.14), transparent 26rem),
                     radial-gradient(circle at 78% 14%, rgba(251, 191, 36, 0.11), transparent 24rem),
                     radial-gradient(circle at 92% 72%, rgba(251, 113, 133, 0.10), transparent 22rem),
-                    var(--runev-bg);
-                color: var(--runev-text);
+                    var(--runev-bg) !important;
+                color: var(--runev-text) !important;
             }
 
             footer, #MainMenu { visibility: hidden; }

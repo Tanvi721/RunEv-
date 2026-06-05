@@ -737,10 +737,14 @@ def render_login() -> None:
     landing_css = """
     <style>
     .stApp:has(.runev-driver-dashboard-landing),
-    body:has(.runev-driver-dashboard-landing) {
+    body:has(.runev-driver-dashboard-landing),
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewContainer"],
+    .stApp:has(.runev-driver-dashboard-landing) section.main,
+    .stApp:has(.runev-driver-dashboard-landing) .main {
         background:
             radial-gradient(circle at 12% 12%, rgba(0, 229, 168, 0.14), transparent 28rem),
             linear-gradient(135deg, #0b1220 0%, #111827 52%, #172033 100%) !important;
+        background-color: #0b1220 !important;
         color: #f8fafc !important;
     }
 
@@ -1203,7 +1207,7 @@ def render_login() -> None:
         # Render static illustration image robustly
         fleet_img = get_image_or_fallback("fleet_visual.png")
         if fleet_img:
-            st.image(fleet_img, use_container_width=True)
+            st.image(fleet_img, use_column_width=True)
         else:
             st.info("🚐 Fleet Operations Visual Placeholder")
         
