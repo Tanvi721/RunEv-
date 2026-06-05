@@ -51,6 +51,19 @@ def clean_html(html_str: str) -> str:
     return " ".join(no_comments.split())
 
 
+def get_image_or_fallback(filename: str) -> str | None:
+    try:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        if os.path.exists(path):
+            return path
+        if os.path.exists(filename):
+            return filename
+    except Exception:
+        pass
+    return None
+
+
+
 def inject_premium_user_styles() -> None:
     css_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "styles", "premium_user.css")
     if os.path.exists(css_path):
@@ -1193,21 +1206,12 @@ def render_login() -> None:
             unsafe_allow_html=True,
         )
         
-        # Render the large premium EV visual image
-        st.image("hero_visual.png", use_container_width=True)
-
-
-
-st.write("Current directory:", os.getcwd())
-st.write("Image exists:", os.path.exists("user_app/hero_visual.png"))
-st.write("Image exists 2:", os.path.exists("hero_visual.png"))
-
-if os.path.exists("user_app/hero_visual.png"):
-    st.image("user_app/hero_visual.png", use_container_width=True)
-elif os.path.exists("hero_visual.png"):
-    st.image("hero_visual.png", use_container_width=True)
-else:
-    st.error("hero_visual.png not found")
+        # Render the large premium EV visual image robustly
+        hero_img = get_image_or_fallback("hero_visual.png")
+        if hero_img:
+            st.image(hero_img, use_container_width=True)
+        else:
+            st.info("⚡ RunEV Hero Visual Placeholder")
         
         # Live status dashboard grid
         dashboard_html = """<div class="dashboard-grid">

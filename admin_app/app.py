@@ -51,6 +51,19 @@ def clean_html(html_str: str) -> str:
     return " ".join(no_comments.split())
 
 
+def get_image_or_fallback(filename: str) -> str | None:
+    try:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        if os.path.exists(path):
+            return path
+        if os.path.exists(filename):
+            return filename
+    except Exception:
+        pass
+    return None
+
+
+
 def inject_driver_styles() -> None:
     styles = """
     <style>
@@ -973,7 +986,7 @@ def render_login() -> None:
         flex-direction: column !important;
         gap: 4px !important;
         margin-bottom: 12px !important;
-        margin-top: 36px !important;
+        margin-top: 0 !important;
     }
     .preview-eyebrow {
         font-size: 11px !important;
@@ -1187,8 +1200,12 @@ def render_login() -> None:
         </div>
         """), unsafe_allow_html=True)
         
-        # Render static illustration image
-        st.image("admin_app/fleet_visual.png", width=1000)
+        # Render static illustration image robustly
+        fleet_img = get_image_or_fallback("fleet_visual.png")
+        if fleet_img:
+            st.image(fleet_img, use_container_width=True)
+        else:
+            st.info("🚐 Fleet Operations Visual Placeholder")
         
         st.markdown(clean_html("""
         <div class="fleet-metrics-grid">

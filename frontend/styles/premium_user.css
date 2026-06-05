@@ -3,13 +3,13 @@
 /* Base Styles & Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
-html, body, [class*="css"], .stApp {
+html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], section.main, .main {
     font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
     background-color: #020617 !important;
     color: #FFFFFF !important;
 }
 
-body, .stApp {
+body, .stApp, [data-testid="stAppViewContainer"], section.main, .main {
     background: 
         radial-gradient(circle at 10% 20%, rgba(0, 229, 168, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
@@ -20,6 +20,19 @@ body, .stApp {
 /* Hide default streamlit bars & headers */
 header, [data-testid="stHeader"], [data-testid="stDecoration"] {
     display: none !important;
+}
+
+/* Hide element containers for hidden iframes (e.g. storage components) to prevent empty vertical space */
+div[data-testid="element-container"]:has(iframe[height="0"]),
+div[data-testid="element-container"]:has(iframe[style*="height: 0"]),
+div[data-testid="element-container"]:has(iframe[style*="height:0"]),
+iframe[height="0"],
+iframe[width="0"] {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Page constraints to prevent scrolling on desktop */
@@ -1126,18 +1139,18 @@ div[data-testid="stForm"] button[title*="Password"],
 /* 2. Hero Image Height Lock & Streamlit Image Container Style */
 .stApp:has(.runev-auth-page) .hero-image,
 .stApp:has(.runev-auth-page) div[data-testid="stImage"] {
-    height: 315px !important;
-    max-height: 315px !important;
+    height: auto !important;
+    max-height: 350px !important;
     overflow: hidden !important;
     border-radius: 24px !important;
 }
 .stApp:has(.runev-auth-page) .hero-image img,
 .stApp:has(.runev-auth-page) .right-panel-visual-img.hero-image img,
 .stApp:has(.runev-auth-page) div[data-testid="stImage"] img {
-    height: 315px !important;
-    max-height: 315px !important;
+    height: auto !important;
+    max-height: 350px !important;
     width: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 24px !important;
 }
 
@@ -1420,4 +1433,25 @@ section.main > div {
 .stApp:has(.runev-auth-page) .block-container,
 .stApp:has(.runev-driver-auth-page) .block-container {
     min-height: auto !important;
+}
+
+/* Force perfect top alignment of columns and remove horizontal spacing gaps */
+.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"] {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    align-items: flex-start !important;
+}
+
+.stApp:has(.runev-auth-page) [data-testid="column"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.stApp:has(.runev-auth-page) [data-testid="column"] > div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.stApp:has(.runev-auth-page) .right-panel-header {
+    margin-top: 0 !important;
 }
