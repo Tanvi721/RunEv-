@@ -99,8 +99,8 @@ def inject_global_styles() -> None:
                 overflow-x: hidden;
             }
 
-            /* Outermost containers get the dark background and gradient */
-            html, body, .stApp, [data-testid="stApp"] {
+            /* Outermost body and html get the dark background and gradient */
+            html, body {
                 background-image:
                     linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92)),
                     radial-gradient(circle at 16% 10%, rgba(0, 229, 168, 0.14), transparent 26rem),
@@ -111,10 +111,15 @@ def inject_global_styles() -> None:
             }
 
             /* Intermediate containers must be transparent so the background shines through */
+            .stApp,
+            [data-testid="stApp"],
             [data-testid="stAppViewContainer"],
             [data-testid="stMainViewContainer"],
             [data-testid="stAppViewBlockContainer"],
             [data-testid="stVerticalBlock"],
+            [data-testid="stHorizontalBlock"],
+            [data-testid="column"],
+            [data-testid="column"] > div,
             section.main,
             .main,
             .block-container {
