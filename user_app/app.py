@@ -1194,7 +1194,20 @@ def render_login() -> None:
         )
         
         # Render the large premium EV visual image
-        st.image("user_app/hero_visual.png", use_container_width=True)
+        st.image("hero_visual.png", use_container_width=True)
+
+
+
+st.write("Current directory:", os.getcwd())
+st.write("Image exists:", os.path.exists("user_app/hero_visual.png"))
+st.write("Image exists 2:", os.path.exists("hero_visual.png"))
+
+if os.path.exists("user_app/hero_visual.png"):
+    st.image("user_app/hero_visual.png", use_container_width=True)
+elif os.path.exists("hero_visual.png"):
+    st.image("hero_visual.png", use_container_width=True)
+else:
+    st.error("hero_visual.png not found")
         
         # Live status dashboard grid
         dashboard_html = """<div class="dashboard-grid">
