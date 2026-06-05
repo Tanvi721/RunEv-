@@ -3,18 +3,42 @@
 /* Base Styles & Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
-html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], section.main, .main {
+:root {
+    /* Force Streamlit theme variables to dark values globally */
+    --st-background-color: #020617 !important;
+    --st-secondary-background-color: #0b1220 !important;
+    --st-text-color: #f8fafc !important;
+    --st-primary-color: #00e5a8 !important;
+    --st-border-color: rgba(148, 163, 184, 0.18) !important;
+    
+    --background-color: #020617 !important;
+    --secondary-background-color: #0b1220 !important;
+    --text-color: #f8fafc !important;
+    --primary-color: #00e5a8 !important;
+    --border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+/* Outermost containers get the dark background and font */
+html, body, .stApp, [data-testid="stApp"] {
     font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
     background-color: #020617 !important;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 229, 168, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%) !important;
     color: #FFFFFF !important;
 }
 
-body, .stApp, [data-testid="stAppViewContainer"], section.main, .main {
-    background: 
-        radial-gradient(circle at 10% 20%, rgba(0, 229, 168, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%),
-        #020617 !important;
+/* Intermediate containers must be transparent so the background shines through */
+[data-testid="stAppViewContainer"],
+[data-testid="stMainViewContainer"],
+[data-testid="stAppViewBlockContainer"],
+[data-testid="stVerticalBlock"],
+section.main,
+.main,
+.block-container {
+    background-color: transparent !important;
+    background: transparent !important;
 }
 
 /* Hide default streamlit bars & headers */

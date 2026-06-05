@@ -738,14 +738,22 @@ def render_login() -> None:
     <style>
     .stApp:has(.runev-driver-dashboard-landing),
     body:has(.runev-driver-dashboard-landing),
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewContainer"],
-    .stApp:has(.runev-driver-dashboard-landing) section.main,
-    .stApp:has(.runev-driver-dashboard-landing) .main {
-        background:
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stApp"] {
+        background-image:
             radial-gradient(circle at 12% 12%, rgba(0, 229, 168, 0.14), transparent 28rem),
             linear-gradient(135deg, #0b1220 0%, #111827 52%, #172033 100%) !important;
         background-color: #0b1220 !important;
         color: #f8fafc !important;
+    }
+
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewContainer"],
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stMainViewContainer"],
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewBlockContainer"],
+    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stVerticalBlock"],
+    .stApp:has(.runev-driver-dashboard-landing) section.main,
+    .stApp:has(.runev-driver-dashboard-landing) .main {
+        background-color: transparent !important;
+        background: transparent !important;
     }
 
     .block-container:has(.runev-driver-dashboard-landing) [data-testid="column"] {

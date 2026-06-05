@@ -23,7 +23,29 @@ def supabase_anon_key() -> str:
 
 
 def app_url() -> str:
-    return os.getenv("RUNEV_USER_APP_URL", "http://localhost:8501").rstrip("/")
+    # First priority: check environment variable
+    env_url = os.getenv("RUNEV_USER_APP_URL")
+    if env_url:
+        return env_url.rstrip("/")
+
+    # Second priority: try to detect from st.context.headers (for Streamlit >= 1.35.0)
+    try:
+        import streamlit as st
+        if hasattr(st, "context") and hasattr(st.context, "headers"):
+            headers = st.context.headers
+            raw_host = headers.get("X-Forwarded-Host") or headers.get("Host")
+            if raw_host:
+                host = raw_host.split(",")[0].strip()
+                raw_scheme = headers.get("X-Forwarded-Proto") or "https"
+                scheme = raw_scheme.split(",")[0].strip()
+                if "localhost" in host or "127.0.0.1" in host:
+                    scheme = "http"
+                return f"{scheme}://{host}"
+    except Exception:
+        pass
+
+    # Fallback to default
+    return "http://localhost:8501"
 
 
 def is_configured() -> bool:
