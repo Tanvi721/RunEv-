@@ -1209,7 +1209,7 @@ def render_login() -> None:
         # Render the large premium EV visual image robustly
         hero_img = get_image_or_fallback("hero_visual.png")
         if hero_img:
-            st.image(hero_img, use_container_width=True)
+            st.image(hero_img, use_column_width=True)
         else:
             st.info("⚡ RunEV Hero Visual Placeholder")
         
