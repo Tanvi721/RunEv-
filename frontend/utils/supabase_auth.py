@@ -23,12 +23,7 @@ def supabase_anon_key() -> str:
 
 
 def app_url() -> str:
-    # First priority: check environment variable
-    env_url = os.getenv("RUNEV_USER_APP_URL")
-    if env_url:
-        return env_url.rstrip("/")
-
-    # Second priority: try to detect from st.context.headers (for Streamlit >= 1.35.0)
+    # First priority: try to detect dynamically from st.context.headers (for Streamlit >= 1.35.0)
     try:
         import streamlit as st
         if hasattr(st, "context") and hasattr(st.context, "headers"):
@@ -44,7 +39,12 @@ def app_url() -> str:
     except Exception:
         pass
 
-    # Fallback to default
+    # Second priority: check environment variable as fallback
+    env_url = os.getenv("RUNEV_USER_APP_URL")
+    if env_url:
+        return env_url.rstrip("/")
+
+    # Third priority: fallback to default
     return "http://localhost:8501"
 
 
