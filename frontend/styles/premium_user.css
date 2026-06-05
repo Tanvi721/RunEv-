@@ -178,6 +178,7 @@ iframe[width="0"] {
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #FFFFFF 30%, #E2E8F0 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -241,6 +242,7 @@ iframe[width="0"] {
 .main-title span {
     background: linear-gradient(135deg, #00E5A8 0%, #3B82F6 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -1343,6 +1345,7 @@ div.stMarkdown .feature-card p,
 .stApp:has(.runev-auth-page) .main-title span {
     background: linear-gradient(135deg, #00E5A8 0%, #3B82F6 100%) !important;
     -webkit-background-clip: text !important;
+    background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
 }
 
