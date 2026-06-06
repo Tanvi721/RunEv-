@@ -75,46 +75,40 @@ def inject_global_styles() -> None:
                 --runev-pink: #fb7185;
                 --runev-violet: #a78bfa;
                 --runev-shadow: 0 24px 80px rgba(2, 6, 23, 0.34);
-
-                /* Force Streamlit theme variables to dark values globally */
-                --st-background-color: #020617 !important;
-                --st-secondary-background-color: #0b1220 !important;
-                --st-text-color: #f8fafc !important;
-                --st-primary-color: #00e5a8 !important;
-                --st-border-color: rgba(148, 163, 184, 0.18) !important;
-                
-                --background-color: #020617 !important;
-                --secondary-background-color: #0b1220 !important;
-                --text-color: #f8fafc !important;
-                --primary-color: #00e5a8 !important;
-                --border-color: rgba(148, 163, 184, 0.18) !important;
             }
 
             html, body, [class*="css"] {
                 font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             }
 
-            html, body, .stApp {
+            html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
                 max-width: 100%;
                 overflow-x: hidden;
+                
+                /* Set dark background variables directly on wrappers */
+                --st-background-color: #020617 !important;
+                --st-secondary-background-color: #0b1220 !important;
+                --st-text-color: #f8fafc !important;
+                --st-primary-color: #00e5a8 !important;
+                
+                --background-color: #020617 !important;
+                --secondary-background-color: #0b1220 !important;
+                --text-color: #f8fafc !important;
+                --primary-color: #00e5a8 !important;
             }
 
-            /* Outermost body and html get the dark background and gradient */
-            html, body {
+            /* Outermost body, html, root and app wrapper get the dark background and gradient */
+            html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
                 background-image:
                     linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92)),
                     radial-gradient(circle at 16% 10%, rgba(0, 229, 168, 0.14), transparent 26rem),
                     radial-gradient(circle at 78% 14%, rgba(251, 191, 36, 0.11), transparent 24rem),
                     radial-gradient(circle at 92% 72%, rgba(251, 113, 133, 0.10), transparent 22rem) !important;
-                background-color: var(--runev-bg) !important;
-                color: var(--runev-text) !important;
+                background-color: #020617 !important;
+                color: #f8fafc !important;
             }
 
             /* Intermediate containers must be transparent so the background shines through */
-            .stApp,
-            [data-testid="stApp"],
-            [data-testid="stAppViewContainer"],
-            [data-testid="stMainViewContainer"],
             [data-testid="stAppViewBlockContainer"],
             [data-testid="stVerticalBlock"],
             [data-testid="stHorizontalBlock"],

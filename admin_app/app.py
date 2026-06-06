@@ -736,27 +736,33 @@ def render_login() -> None:
     
     landing_css = """
     <style>
-    body:has(.runev-driver-dashboard-landing),
-    html:has(.runev-driver-dashboard-landing) {
+    html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
         background-image:
             radial-gradient(circle at 12% 12%, rgba(0, 229, 168, 0.14), transparent 28rem),
             linear-gradient(135deg, #0b1220 0%, #111827 52%, #172033 100%) !important;
         background-color: #0b1220 !important;
         color: #f8fafc !important;
+        
+        /* Force theme variables directly on elements to block overrides */
+        --st-background-color: #0b1220 !important;
+        --st-secondary-background-color: #111827 !important;
+        --st-text-color: #f8fafc !important;
+        --st-primary-color: #14e6b0 !important;
+
+        --background-color: #0b1220 !important;
+        --secondary-background-color: #111827 !important;
+        --text-color: #f8fafc !important;
+        --primary-color: #14e6b0 !important;
     }
 
-    .stApp:has(.runev-driver-dashboard-landing),
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stApp"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewContainer"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stMainViewContainer"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stAppViewBlockContainer"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stVerticalBlock"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="stHorizontalBlock"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="column"],
-    .stApp:has(.runev-driver-dashboard-landing) [data-testid="column"] > div,
-    .stApp:has(.runev-driver-dashboard-landing) section.main,
-    .stApp:has(.runev-driver-dashboard-landing) .main,
-    .stApp:has(.runev-driver-dashboard-landing) .block-container {
+    [data-testid="stAppViewBlockContainer"],
+    [data-testid="stVerticalBlock"],
+    [data-testid="stHorizontalBlock"],
+    [data-testid="column"],
+    [data-testid="column"] > div,
+    section.main,
+    .main,
+    .block-container {
         background-color: transparent !important;
         background: transparent !important;
     }

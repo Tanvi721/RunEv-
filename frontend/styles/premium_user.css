@@ -18,8 +18,8 @@
     --border-color: rgba(148, 163, 184, 0.18) !important;
 }
 
-/* Outermost body and html get the dark background and font */
-html, body {
+/* Outermost body, html, root and app wrapper get the dark background and font */
+html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
     font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
     background-color: #020617 !important;
     background-image: 
@@ -27,13 +27,20 @@ html, body {
         radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%) !important;
     color: #FFFFFF !important;
+
+    /* Set dark variables directly on containers to override scoped styles */
+    --st-background-color: #020617 !important;
+    --st-secondary-background-color: #0b1220 !important;
+    --st-text-color: #f8fafc !important;
+    --st-primary-color: #00e5a8 !important;
+    
+    --background-color: #020617 !important;
+    --secondary-background-color: #0b1220 !important;
+    --text-color: #f8fafc !important;
+    --primary-color: #00e5a8 !important;
 }
 
 /* Intermediate containers must be transparent so the background shines through */
-.stApp,
-[data-testid="stApp"],
-[data-testid="stAppViewContainer"],
-[data-testid="stMainViewContainer"],
 [data-testid="stAppViewBlockContainer"],
 [data-testid="stVerticalBlock"],
 [data-testid="stHorizontalBlock"],
