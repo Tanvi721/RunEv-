@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import requests
+import streamlit as st
 
 
 class SupabaseAuthError(Exception):
@@ -15,11 +16,17 @@ class SupabaseAuthError(Exception):
 
 
 def supabase_url() -> str:
-    return os.getenv("SUPABASE_URL", "").rstrip("/")
+    try:
+        return st.secrets.get("SUPABASE_URL", "").rstrip("/")
+    except Exception:
+        return os.getenv("SUPABASE_URL", "").rstrip("/")
 
 
 def supabase_anon_key() -> str:
-    return os.getenv("SUPABASE_ANON_KEY", "")
+    try:
+        return st.secrets.get("SUPABASE_ANON_KEY", "")
+    except Exception:
+        return os.getenv("SUPABASE_ANON_KEY", "")
 
 
 def app_url() -> str:

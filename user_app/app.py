@@ -77,6 +77,14 @@ def inject_premium_user_styles() -> None:
 
 
 configure_page("RunEV - User App", "⚡")
+
+import os
+import streamlit as st
+
+st.write("SUPABASE_URL =", os.getenv("SUPABASE_URL"))
+st.write("SUPABASE_ANON_KEY exists =", bool(os.getenv("SUPABASE_ANON_KEY")))
+st.write("RUNEV_USER_APP_URL =", os.getenv("RUNEV_USER_APP_URL"))
+
 inject_global_styles()
 inject_premium_user_styles()
 init_theme_state()
@@ -1231,7 +1239,16 @@ def render_login() -> None:
         # Render the large premium EV visual image robustly
         hero_img = get_image_or_fallback("hero_visual.png")
         if hero_img:
-            st.image(hero_img, use_column_width=True)
+            import base64
+            try:
+                with open(hero_img, "rb") as f:
+                    img_base64 = base64.b64encode(f.read()).decode()
+                st.markdown(
+                    f'<img src="data:image/png;base64,{img_base64}" style="width: 100%; border-radius: 16px; margin-bottom: 12px; display: block;" />',
+                    unsafe_allow_html=True,
+                )
+            except Exception:
+                st.info("⚡ RunEV Hero Visual Placeholder")
         else:
             st.info("⚡ RunEV Hero Visual Placeholder")
         

@@ -1349,7 +1349,18 @@ def render_login() -> None:
         # Render visual image
         fleet_img = get_image_or_fallback("hero_visual.png")
         if fleet_img:
-            st.image(fleet_img, use_column_width=True)
+            import base64
+            try:
+                with open(fleet_img, "rb") as f:
+                    img_base64 = base64.b64encode(f.read()).decode()
+                st.markdown(
+                    f'<img src="data:image/png;base64,{img_base64}" style="width: 100%; border-radius: 16px; margin-bottom: 12px; display: block;" />',
+                    unsafe_allow_html=True,
+                )
+            except Exception:
+                st.info("⚡ RunEV Fleet Visual Placeholder")
+        else:
+            st.info("⚡ RunEV Fleet Visual Placeholder")
             
         # Live Fleet Overview SVG Map
         st.markdown(clean_html("""
