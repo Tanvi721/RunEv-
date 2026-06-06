@@ -972,7 +972,7 @@ def render_login() -> None:
         st.markdown(
             textwrap.dedent("""
             <div class="small-label">ON-DEMAND EV CHARGING</div>
-            <h1 class="main-title hero-title">Run Out of Charge?<br><span>RunEV Comes To You.</span></h1>
+            <h1 class="main-title hero-title">Run Out of Charge?<br><span>RunEV Comes To You. ⚡</span></h1>
             <p class="supporting-text">Request a charging van in minutes, track it live, pay securely, and continue your trip without waiting.</p>
             """),
             unsafe_allow_html=True,
@@ -981,21 +981,26 @@ def render_login() -> None:
         # Feature cards
         st.markdown(
             textwrap.dedent("""
-            <div class="feature-cards-container">
-                <div class="feature-card green-card">
-                    <div class="feature-icon-wrapper">⚡</div>
-                    <h4 class="feature-title">Fast Response</h4>
-                    <p class="feature-desc">Average arrival under 15 minutes</p>
+            <div class="feature-cards-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
+                <div class="feature-card green-card" style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px;">⚡</div>
+                    <h4 class="feature-title" style="font-size: 16px; margin: 0; font-weight: 700; color: #FFFFFF;">Fast Response</h4>
+                    <p class="feature-desc" style="font-size: 13px; margin: 0; color: #94A3B8; line-height: 1.2;">Average arrival under 15 min</p>
                 </div>
-                <div class="feature-card blue-card">
-                    <div class="feature-icon-wrapper">📍</div>
-                    <h4 class="feature-title">Live Tracking</h4>
-                    <p class="feature-desc">Track your charging van in real time</p>
+                <div class="feature-card blue-card" style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px;">📍</div>
+                    <h4 class="feature-title" style="font-size: 16px; margin: 0; font-weight: 700; color: #FFFFFF;">Live Tracking</h4>
+                    <p class="feature-desc" style="font-size: 13px; margin: 0; color: #94A3B8; line-height: 1.2;">Track your charging van in real time</p>
                 </div>
-                <div class="feature-card purple-card">
-                    <div class="feature-icon-wrapper">🛡️</div>
-                    <h4 class="feature-title">Secure Payments</h4>
-                    <p class="feature-desc">UPI, Cards, Wallets</p>
+                <div class="feature-card purple-card" style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px;">🧭</div>
+                    <h4 class="feature-title" style="font-size: 16px; margin: 0; font-weight: 700; color: #FFFFFF;">Track Map</h4>
+                    <p class="feature-desc" style="font-size: 13px; margin: 0; color: #94A3B8; line-height: 1.2;">Track Map in real time</p>
+                </div>
+                <div class="feature-card purple-card" style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px;">🛡️</div>
+                    <h4 class="feature-title" style="font-size: 16px; margin: 0; font-weight: 700; color: #FFFFFF;">Secure Payments</h4>
+                    <p class="feature-desc" style="font-size: 13px; margin: 0; color: #94A3B8; line-height: 1.2;">UPI, Cards, Wallets</p>
                 </div>
             </div>
             """),
@@ -1045,7 +1050,6 @@ def render_login() -> None:
             else:
                 # Regular Auth Container with Tabs
                 pass
-                
                 tab_login, tab_signup, tab_magic = st.tabs(["Login", "Sign Up", "Passwordless Login"])
                 
                 with tab_login:
@@ -1054,6 +1058,21 @@ def render_login() -> None:
                     st.link_button("Continue with Google", google_url, use_container_width=True, disabled=bool(auth_loading))
                     
                     st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
+                    
+                    # Passwordless Login Form inside the same tab
+                    with st.form("user_magic_link_form_login"):
+                        magic_email = st.text_input("Email Address", key="user_login_magic_email", placeholder="Enter your email")
+                        magic_submit = st.form_submit_button("Send Magic Link", use_container_width=True, disabled=bool(auth_loading))
+                        if magic_submit:
+                            try:
+                                normalized_email = normalize_email(magic_email)
+                                send_supabase_magic_link(normalized_email)
+                                st.success("Sign-in link sent. Open the email on this device to finish signing in.")
+                            except (ValueError, supabase_auth.SupabaseAuthError) as exc:
+                                st.error(str(exc))
+                                
+                    st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="passwordless-helper-text" style="font-weight: 800; font-size: 15px; margin-bottom: 8px; color: #FFFFFF;">Password Login</div>', unsafe_allow_html=True)
                     
                     with st.form("user_password_login_form"):
                         email = st.text_input("Email Address", key="user_login_email", placeholder="Enter your email")
@@ -1289,31 +1308,31 @@ def render_login() -> None:
     # Bottom Benefits Bar
     benefits_html = """<div class="benefits-bar">
 <div class="benefit-item">
-<div class="benefit-icon">⏱️</div>
-<div class="benefit-text-wrap">
-<div class="benefit-title">Zero Waiting Time</div>
-<div class="benefit-desc">We come to you</div>
-</div>
-</div>
-<div class="benefit-item">
 <div class="benefit-icon">🛡️</div>
 <div class="benefit-text-wrap">
 <div class="benefit-title">Safe & Reliable</div>
-<div class="benefit-desc">Verified vans & experts</div>
+<div class="benefit-desc">Verified professionals</div>
 </div>
 </div>
 <div class="benefit-item">
-<div class="benefit-icon">💸</div>
+<div class="benefit-icon">🏷️</div>
 <div class="benefit-text-wrap">
-<div class="benefit-title">Transparent Pricing</div>
-<div class="benefit-desc">No hidden charges</div>
+<div class="benefit-title">Affordable</div>
+<div class="benefit-desc">Transparent pricing</div>
 </div>
 </div>
 <div class="benefit-item">
 <div class="benefit-icon">🌱</div>
 <div class="benefit-text-wrap">
-<div class="benefit-title">Better For The Planet</div>
-<div class="benefit-desc">Drive clean, stay green</div>
+<div class="benefit-title">Eco Friendly</div>
+<div class="benefit-desc">Zero Emission Future</div>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">⏱️</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Always On</div>
+<div class="benefit-desc">24/7 Service</div>
 </div>
 </div>
 </div>"""

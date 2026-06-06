@@ -1183,97 +1183,246 @@ def render_login() -> None:
     }
     </style>
     """
-    st.markdown(landing_css, unsafe_allow_html=True)
-
-    st.markdown(clean_html("""
-    <div class="runev-fleet-hero-banner">
-        <div class="banner-content">
-            <span class="banner-logo">⚡ RunEV Dispatch</span>
-            <span class="banner-divider">|</span>
-            <span class="banner-subtitle">OPERATIONS COMMAND CENTRE</span>
+    st.markdown(landing_css, unsafe_allow_html=True)    st.markdown(clean_html("""
+    <div class="premium-header brand-header">
+        <div class="logo-container">
+            <div class="runev-logo" style="font-size: 24px; font-weight: 800; color: #FFFFFF;">RunEV<span style="color: #00E5A8;">.</span></div>
+            <span class="driver-app-badge app-badge" style="background: rgba(20, 230, 176, 0.1); border: 1px solid rgba(20, 230, 176, 0.2); color: #14e6b0; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;">Driver App</span>
         </div>
-        <div class="banner-status">
-            <span class="status-dot"></span> Live Network Active
+        <div class="banner-status" style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;">
+            <span class="status-dot" style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; display: inline-block;"></span> Live Network Active
         </div>
     </div>
     """), unsafe_allow_html=True)
     
-    col_left, col_right = st.columns([0.58, 0.42], gap="medium")
+    col_left, col_right = st.columns([0.35, 0.65], gap="large")
+    st.markdown("""
+<style>
+.block-container {
+    padding-top: 0rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
     
     with col_left:
-        st.markdown(clean_html("""
-        <div class="runev-fleet-label">ON-DEMAND DISPATCH PLATFORM</div>
-        <h1 class="runev-fleet-main-heading">RunEV Dispatch</h1>
-        <p class="runev-fleet-subheading">Manage charging operations, drivers and fleet performance.</p>
-        """), unsafe_allow_html=True)
-        
-        tab_login, tab_register = st.tabs(["Login", "Registration"])
-        with tab_login:
-            if st.session_state.get("driver_auth_mode") == "forgot":
-                render_driver_forgot_password()
-            else:
-                render_driver_login_form()
-        with tab_register:
+        if st.session_state.get("driver_auth_mode") == "register":
+            st.markdown(clean_html("""
+            <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">NEW OPERATOR</div>
+            <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Register Fleet</h1>
+            <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Create a fleet account and add your first charging van.</p>
+            """), unsafe_allow_html=True)
             render_driver_register_form()
+            
+        elif st.session_state.get("driver_auth_mode") == "forgot":
+            st.markdown(clean_html("""
+            <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">ACCOUNT RECOVERY</div>
+            <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Forgot Password</h1>
+            <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Enter your email to reset your fleet account password.</p>
+            """), unsafe_allow_html=True)
+            render_driver_forgot_password()
+            
+        else:
+            st.markdown(clean_html("""
+            <div class="runev-fleet-label" style="font-size: 11px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 2px;">DRIVER LOGIN</div>
+            """), unsafe_allow_html=True)
+            
+            render_driver_login_form()
+            
+            # Register Now section
+            st.markdown(clean_html("""
+            <div style="margin-top: 24px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 15px; color: #FFFFFF; margin-bottom: 4px;">New Driver?</div>
+                <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">Join RunEV Network</div>
+            </div>
+            """), unsafe_allow_html=True)
+            
+            if st.button("Register Now  →", use_container_width=True, key="driver_register_now_landing_btn"):
+                st.session_state.driver_auth_mode = "register"
+                st.rerun()
+                
+            # Earn More section
+            st.markdown(clean_html("""
+            <div style="margin-top: 16px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 12px;">
+                <div style="font-weight: 800; font-size: 15px; color: #FFFFFF; margin-bottom: 12px;">Earn More with RunEV</div>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #cbd5e1;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #14e6b0; font-weight: 800;">✓</span> High Demand
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #14e6b0; font-weight: 800;">✓</span> Flexible Hours
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #14e6b0; font-weight: 800;">✓</span> Instant Payments
+                    </div>
+                </div>
+            </div>
+            """), unsafe_allow_html=True)
+            
+            van_img = get_image_or_fallback("fleet_visual.png")
+            if van_img:
+                st.image(van_img, use_column_width=True)
             
     with col_right:
         st.markdown(clean_html("""
         <div class="right-panel-header">
-            <div class="preview-eyebrow">LIVE FLEET DASHBOARD</div>
+            <h2 style="margin: 0; font-size: 26px; font-weight: 800; color: #FFFFFF; line-height: 1.1;">Operations Command Centre</h2>
+            <div style="font-size: 13px; color: #cbd5e1;">Monitor. Respond. Deliver.</div>
         </div>
-        """), unsafe_allow_html=True)
         
-        # Render static illustration image robustly
-        fleet_img = get_image_or_fallback("fleet_visual.png")
-        if fleet_img:
-            st.image(fleet_img, use_column_width=True)
-        else:
-            st.info("🚐 Fleet Operations Visual Placeholder")
-        
-        st.markdown(clean_html("""
-        <div class="fleet-metrics-grid">
-            <div class="fleet-metric-card">
-                <div class="metric-header">
-                    <span>Today's Revenue</span>
-                    <span class="metric-icon">💰</span>
+        <div class="fleet-metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-top: 10px; margin-bottom: 15px;">
+            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
+                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
+                    <span>Active Requests</span>
+                    <span class="metric-icon" style="color: #ef4444; font-weight: 800;">+</span>
                 </div>
-                <div class="metric-value text-green">₹2,45,680</div>
+                <div class="metric-value text-green" style="font-size: 20px; font-weight: 800; color: #14e6b0; line-height: 1;">8</div>
+                <div style="font-size: 10px; color: #cbd5e1;">Live</div>
             </div>
-            <div class="fleet-metric-card">
-                <div class="metric-header">
-                    <span>Active Drivers</span>
-                    <span class="metric-icon">👥</span>
+            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
+                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
+                    <span>En Route</span>
+                    <span class="metric-icon">🚐</span>
                 </div>
-                <div class="metric-value text-blue">128</div>
+                <div class="metric-value text-blue" style="font-size: 20px; font-weight: 800; color: #3b82f6; line-height: 1;">3</div>
+                <div style="font-size: 10px; color: #cbd5e1;">On the way</div>
             </div>
-            <div class="fleet-metric-card">
-                <div class="metric-header">
-                    <span>Live Requests</span>
+            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
+                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
+                    <span>Charging</span>
                     <span class="metric-icon">⚡</span>
                 </div>
-                <div class="metric-value text-purple">32</div>
+                <div class="metric-value text-purple" style="font-size: 20px; font-weight: 800; color: #a855f7; line-height: 1;">2</div>
+                <div style="font-size: 10px; color: #cbd5e1;">In Progress</div>
             </div>
-            <div class="fleet-metric-card">
-                <div class="metric-header">
-                    <span>Fleet SLA</span>
-                    <span class="metric-icon">📈</span>
+            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
+                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
+                    <span>Completed Today</span>
+                    <span class="metric-icon">📄</span>
                 </div>
-                <div class="metric-value text-green">99.8%</div>
+                <div class="metric-value text-green" style="font-size: 20px; font-weight: 800; color: #14e6b0; line-height: 1;">14</div>
+                <div style="font-size: 9px; color: #cbd5e1;">+20% vs yesterday</div>
             </div>
         </div>
         """), unsafe_allow_html=True)
-
+        
+        # Render visual image
+        fleet_img = get_image_or_fallback("hero_visual.png")
+        if fleet_img:
+            st.image(fleet_img, use_column_width=True)
+            
+        # Live Fleet Overview SVG Map
+        st.markdown(clean_html("""
+        <div class="live-fleet-map-container" style="border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: #0a0f1d; padding: 12px; height: 180px; position: relative; overflow: hidden; margin-top: 12px; margin-bottom: 15px;">
+            <div style="font-weight: 800; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Live Fleet Overview</div>
+            <svg width="100%" height="130" viewBox="0 0 400 130" style="background: #0a1122; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <defs>
+                    <pattern id="mapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#mapGrid)" />
+                
+                <path d="M 20,40 L 380,40" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
+                <path d="M 20,90 L 380,90" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
+                <path d="M 80,10 L 80,120" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
+                <path d="M 300,10 L 300,120" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
+                
+                <path d="M 80,90 C 120,90 150,40 300,40" stroke="#10b981" stroke-width="3" stroke-dasharray="5 3" fill="none" />
+                <path d="M 80,90 C 120,90 150,40 190,56" stroke="#10b981" stroke-width="3" fill="none" />
+                
+                <circle cx="80" cy="90" r="5" fill="#10b981" />
+                <circle cx="80" cy="90" r="9" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.5" />
+                
+                <g transform="translate(185, 52)">
+                    <circle cx="6" cy="6" r="12" fill="#047857" opacity="0.3" />
+                    <circle cx="6" cy="6" r="7" fill="#10b981" />
+                    <text x="2" y="9" font-family="sans-serif" font-size="9px" fill="#FFFFFF" font-weight="bold">🚐</text>
+                </g>
+                
+                <g transform="translate(295, 20)">
+                    <path d="M5,0 C2,0 0,2 0,5 C0,8.7 5,14 5,14 C5,14 10,8.7 10,5 C10,2 8,0 5,0 Z" fill="#ef4444" />
+                    <circle cx="5" cy="5" r="2" fill="#FFFFFF" />
+                </g>
+            </svg>
+        </div>
+        
+        <!-- Recent Requests Custom HTML Table -->
+        <div style="border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); padding: 16px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-weight: 800; font-size: 14px; color: #FFFFFF;">Recent Requests</span>
+                <span style="font-size: 11px; font-weight: 700; color: #14e6b0; cursor: pointer; border: 1px solid rgba(20, 230, 176, 0.3); padding: 3px 8px; border-radius: 6px;">View All</span>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); color: #94a3b8; font-weight: 700;">
+                        <th style="padding: 8px 4px;">#</th>
+                        <th style="padding: 8px 4px;">Customer</th>
+                        <th style="padding: 8px 4px;">Location</th>
+                        <th style="padding: 8px 4px;">Status</th>
+                        <th style="padding: 8px 4px;">ETA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                        <td style="padding: 10px 4px;">1</td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Rahul Sharma</td>
+                        <td style="padding: 10px 4px;">Viman Nagar, Pune</td>
+                        <td style="padding: 10px 4px;"><span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">En Route</span></td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">8 min</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                        <td style="padding: 10px 4px;">2</td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Priya Patel</td>
+                        <td style="padding: 10px 4px;">Baner, Pune</td>
+                        <td style="padding: 10px 4px;"><span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Arrived</span></td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">2 min</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                        <td style="padding: 10px 4px;">3</td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Amit Verma</td>
+                        <td style="padding: 10px 4px;">Kharadi, Pune</td>
+                        <td style="padding: 10px 4px;"><span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Charging</span></td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">15 min</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 4px;">4</td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Sneha Iyer</td>
+                        <td style="padding: 10px 4px;">Wakad, Pune</td>
+                        <td style="padding: 10px 4px;"><span style="background: rgba(20, 184, 166, 0.15); color: #00e5a8; border: 1px solid rgba(20, 184, 166, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Accepted</span></td>
+                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">12 min</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Bottom Row with Stats -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); padding: 12px 16px; margin-bottom: 10px;">
+            <div style="display: flex; gap: 24px;">
+                <div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Earnings Today</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">₹4,250</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Trips Completed</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">5</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Availability</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981;"></span> Online
+                    </div>
+                </div>
+            </div>
+            <div style="border: 1px solid rgba(239, 68, 68, 0.4); padding: 6px 14px; border-radius: 8px; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; background: rgba(239, 68, 68, 0.08);">
+                Go Offline
+            </div>
+        </div>
+        """), unsafe_allow_html=True)
+        
     # Render thin footer strip at the bottom of the page
     st.markdown(clean_html("""
-    <div class="runev-fleet-footer">
-        <div class="footer-content">
-            <span class="footer-label">FLEET STATS:</span>
-            <span class="footer-item"><span class="footer-num">24</span> Vans</span>
-            <span class="footer-divider">|</span>
-            <span class="footer-item"><span class="footer-num">128</span> Sessions</span>
-            <span class="footer-divider">|</span>
-            <span class="footer-item"><span class="footer-num">99.8%</span> SLA</span>
-        </div>
+    <div style="width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; margin-top: 15px; text-align: center; font-size: 12px; color: #94a3b8;">
+        © 2024 RunEV. All rights reserved.
     </div>
     """), unsafe_allow_html=True)
 
