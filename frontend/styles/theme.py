@@ -2218,59 +2218,59 @@ def inject_global_styles() -> None:
             }
 
             html[data-runev-theme="light"] {
-                color-scheme: light;
-                --runev-bg: #f6f8fb;
-                --runev-panel: #ffffff;
-                --runev-surface: #ffffff;
-                --runev-surface-secondary: #eef3f8;
-                --runev-card: #ffffff;
-                --runev-card-soft: rgba(255, 255, 255, 0.94);
-                --runev-border: rgba(15, 23, 42, 0.14);
-                --runev-divider: rgba(15, 23, 42, 0.10);
-                --runev-text: #0f172a;
-                --runev-text-secondary: #334155;
-                --runev-muted: #64748b;
-                --runev-green: #059669;
-                --runev-accent: #059669;
-                --runev-success: #059669;
-                --runev-warn: #b45309;
-                --runev-danger: #dc2626;
-                --runev-info: #2563eb;
-                --runev-gradient-start: #10b981;
-                --runev-gradient-end: #2563eb;
-                --runev-shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
-                --runev-shadow-medium: 0 18px 42px rgba(15, 23, 42, 0.12);
-                --runev-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+                color-scheme: dark;
+                --runev-bg: #0b1220;
+                --runev-panel: #111827;
+                --runev-surface: #111827;
+                --runev-surface-secondary: #172033;
+                --runev-card: #1e293b;
+                --runev-card-soft: rgba(30, 41, 59, 0.78);
+                --runev-border: rgba(148, 163, 184, 0.22);
+                --runev-divider: rgba(148, 163, 184, 0.16);
+                --runev-text: #f8fafc;
+                --runev-text-secondary: #cbd5e1;
+                --runev-muted: #94a3b8;
+                --runev-green: #14e6b0;
+                --runev-accent: #14e6b0;
+                --runev-success: #10b981;
+                --runev-warn: #f59e0b;
+                --runev-danger: #ef4444;
+                --runev-info: #3b82f6;
+                --runev-gradient-start: #14e6b0;
+                --runev-gradient-end: #6366f1;
+                --runev-shadow-soft: 0 10px 26px rgba(2, 6, 23, 0.18);
+                --runev-shadow-medium: 0 18px 46px rgba(2, 6, 23, 0.28);
+                --runev-shadow: 0 24px 70px rgba(2, 6, 23, 0.34);
             }
 
             html[data-runev-theme="system"] {
-                color-scheme: light dark;
+                color-scheme: dark;
             }
 
             @media (prefers-color-scheme: light) {
                 html[data-runev-theme="system"] {
-                    --runev-bg: #f6f8fb;
-                    --runev-panel: #ffffff;
-                    --runev-surface: #ffffff;
-                    --runev-surface-secondary: #eef3f8;
-                    --runev-card: #ffffff;
-                    --runev-card-soft: rgba(255, 255, 255, 0.94);
-                    --runev-border: rgba(15, 23, 42, 0.14);
-                    --runev-divider: rgba(15, 23, 42, 0.10);
-                    --runev-text: #0f172a;
-                    --runev-text-secondary: #334155;
-                    --runev-muted: #64748b;
-                    --runev-green: #059669;
-                    --runev-accent: #059669;
-                    --runev-success: #059669;
-                    --runev-warn: #b45309;
-                    --runev-danger: #dc2626;
-                    --runev-info: #2563eb;
-                    --runev-gradient-start: #10b981;
-                    --runev-gradient-end: #2563eb;
-                    --runev-shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
-                    --runev-shadow-medium: 0 18px 42px rgba(15, 23, 42, 0.12);
-                    --runev-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+                    --runev-bg: #0b1220;
+                    --runev-panel: #111827;
+                    --runev-surface: #111827;
+                    --runev-surface-secondary: #172033;
+                    --runev-card: #1e293b;
+                    --runev-card-soft: rgba(30, 41, 59, 0.78);
+                    --runev-border: rgba(148, 163, 184, 0.22);
+                    --runev-divider: rgba(148, 163, 184, 0.16);
+                    --runev-text: #f8fafc;
+                    --runev-text-secondary: #cbd5e1;
+                    --runev-muted: #94a3b8;
+                    --runev-green: #14e6b0;
+                    --runev-accent: #14e6b0;
+                    --runev-success: #10b981;
+                    --runev-warn: #f59e0b;
+                    --runev-danger: #ef4444;
+                    --runev-info: #3b82f6;
+                    --runev-gradient-start: #14e6b0;
+                    --runev-gradient-end: #6366f1;
+                    --runev-shadow-soft: 0 10px 26px rgba(2, 6, 23, 0.18);
+                    --runev-shadow-medium: 0 18px 46px rgba(2, 6, 23, 0.28);
+                    --runev-shadow: 0 24px 70px rgba(2, 6, 23, 0.34);
                 }
             }
 
@@ -2368,24 +2368,24 @@ def inject_global_styles() -> None:
             }
 
             html[data-runev-theme="light"] {
-                --runev-bg: #f4f7fb;
-                --runev-panel: #ffffff;
-                --runev-surface: #ffffff;
-                --runev-surface-secondary: #edf3f8;
-                --runev-card: #ffffff;
-                --runev-card-soft: rgba(255, 255, 255, 0.96);
-                --runev-border: rgba(15, 23, 42, 0.12);
-                --runev-divider: rgba(15, 23, 42, 0.09);
-                --runev-text: #0f172a;
-                --runev-text-secondary: #334155;
-                --runev-muted: #64748b;
-                --runev-green: #047857;
-                --runev-accent: #047857;
-                --runev-gradient-start: #10b981;
-                --runev-gradient-end: #4f46e5;
-                --runev-shadow-soft: 0 12px 28px rgba(15, 23, 42, 0.08);
-                --runev-shadow-medium: 0 20px 48px rgba(15, 23, 42, 0.12);
-                --runev-shadow: 0 28px 70px rgba(15, 23, 42, 0.15);
+                --runev-bg: #0a1020;
+                --runev-panel: #111827;
+                --runev-surface: #121b2c;
+                --runev-surface-secondary: #18243a;
+                --runev-card: #172033;
+                --runev-card-soft: rgba(18, 27, 44, 0.88);
+                --runev-border: rgba(148, 163, 184, 0.20);
+                --runev-divider: rgba(148, 163, 184, 0.14);
+                --runev-text: #f8fafc;
+                --runev-text-secondary: #cbd5e1;
+                --runev-muted: #94a3b8;
+                --runev-green: #12e6b4;
+                --runev-accent: #12e6b4;
+                --runev-gradient-start: #11d8b0;
+                --runev-gradient-end: #6d7df6;
+                --runev-shadow-soft: 0 14px 38px rgba(2, 6, 23, 0.22);
+                --runev-shadow-medium: 0 22px 58px rgba(2, 6, 23, 0.30);
+                --runev-shadow: 0 28px 86px rgba(2, 6, 23, 0.38);
             }
 
             body,
