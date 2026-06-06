@@ -45,6 +45,11 @@ from frontend.components.geolocation import live_location_button, validate_coord
 from backend.core.validation import normalize_email, password_strength, validate_full_name, validate_password
 
 
+
+st.write("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+st.write("SUPABASE_ANON_KEY exists:", bool(os.getenv("SUPABASE_ANON_KEY")))
+st.write("RUNEV_USER_APP_URL:", os.getenv("RUNEV_USER_APP_URL"))
+
 def clean_html(html_str: str) -> str:
     import re
     no_comments = re.sub(r"<!--.*?-->", "", html_str, flags=re.DOTALL)
@@ -1066,23 +1071,6 @@ def render_login() -> None:
                     
                     st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
                     
-                    # Passwordless Login Form inside the same tab
-                    st.markdown('<div class="magic-link-form-wrap">', unsafe_allow_html=True)
-                    with st.form("user_magic_link_form_login"):
-                        magic_email = st.text_input("Email Address", key="user_login_magic_email", placeholder="Enter your email")
-                        magic_submit = st.form_submit_button("Send Magic Link", use_container_width=True, disabled=bool(auth_loading))
-                        if magic_submit:
-                            try:
-                                normalized_email = normalize_email(magic_email)
-                                send_supabase_magic_link(normalized_email)
-                                st.success("Sign-in link sent. Open the email on this device to finish signing in.")
-                            except (ValueError, supabase_auth.SupabaseAuthError) as exc:
-                                st.error(str(exc))
-                    st.markdown('</div>', unsafe_allow_html=True)
-                                
-                    st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
-                    st.markdown('<div class="passwordless-helper-text" style="font-weight: 800; font-size: 15px; margin-bottom: 8px; color: #FFFFFF;">Password Login</div>', unsafe_allow_html=True)
-                    
                     st.markdown('<div class="password-login-form-wrap">', unsafe_allow_html=True)
                     with st.form("user_password_login_form"):
                         email = st.text_input("Email Address", key="user_login_email", placeholder="Enter your email")
@@ -1191,7 +1179,7 @@ def render_login() -> None:
                     with st.form("user_magic_link_form"):
                         magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="Enter your email")
                         
-                        magic_submit = st.form_submit_button("Send Sign-in Link", use_container_width=True, disabled=bool(auth_loading))
+                        magic_submit = st.form_submit_button("Send Magic Link", use_container_width=True, disabled=bool(auth_loading))
                         if magic_submit:
                             try:
                                 normalized_email = normalize_email(magic_email)

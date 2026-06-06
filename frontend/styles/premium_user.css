@@ -1496,7 +1496,8 @@ section.main > div {
 }
 
 /* Custom Login Forms Overrides (Magic Link vs Password Login) */
-.magic-link-form-wrap [data-testid="stFormSubmitButton"] button {
+div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button,
+div.magic-link-form-wrap button {
     background: #172033 !important;
     border: 1px solid rgba(148, 163, 184, 0.22) !important;
     color: #FFFFFF !important;
@@ -1511,14 +1512,16 @@ section.main > div {
     height: 44px !important;
 }
 
-.magic-link-form-wrap [data-testid="stFormSubmitButton"] button::before {
+div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button::before,
+div.magic-link-form-wrap button::before {
     content: "✉" !important;
     margin-right: 8px !important;
     font-size: 14px !important;
     display: inline-block !important;
 }
 
-.magic-link-form-wrap [data-testid="stFormSubmitButton"] button:hover {
+div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover,
+div.magic-link-form-wrap button:hover {
     background: #1e293b !important;
     border-color: rgba(148, 163, 184, 0.4) !important;
     transform: translateY(-1px) !important;
@@ -1548,15 +1551,7 @@ section.main > div {
 /* Perfect alignment of Remember Me and Forgot Password row on desktop */
 .stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) {
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0 !important;
     margin-bottom: 8px !important;
-}
-
-.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) div[data-testid="column"] {
-    width: auto !important;
-    max-width: 50% !important;
-    flex: unset !important;
 }
 
 .stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) .stCheckbox {
