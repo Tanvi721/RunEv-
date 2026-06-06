@@ -1279,63 +1279,29 @@ def render_login() -> None:
 """, unsafe_allow_html=True)
     
     with col_left:
-        if st.session_state.get("driver_auth_mode") == "register":
+        tab_login, tab_register = st.tabs(["Login", "Registration"])
+        
+        with tab_login:
+            if st.session_state.get("driver_auth_mode") == "forgot":
+                st.markdown(clean_html("""
+                <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">ACCOUNT RECOVERY</div>
+                <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Forgot Password</h1>
+                <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Enter your email to reset your fleet account password.</p>
+                """), unsafe_allow_html=True)
+                render_driver_forgot_password()
+            else:
+                st.markdown(clean_html("""
+                <div class="runev-fleet-label" style="font-size: 11px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 2px;">DRIVER LOGIN</div>
+                """), unsafe_allow_html=True)
+                render_driver_login_form()
+                
+        with tab_register:
             st.markdown(clean_html("""
             <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">NEW OPERATOR</div>
             <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Register Fleet</h1>
             <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Create a fleet account and add your first charging van.</p>
             """), unsafe_allow_html=True)
             render_driver_register_form()
-            
-        elif st.session_state.get("driver_auth_mode") == "forgot":
-            st.markdown(clean_html("""
-            <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">ACCOUNT RECOVERY</div>
-            <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Forgot Password</h1>
-            <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Enter your email to reset your fleet account password.</p>
-            """), unsafe_allow_html=True)
-            render_driver_forgot_password()
-            
-        else:
-            st.markdown(clean_html("""
-            <div class="runev-fleet-label" style="font-size: 11px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 2px;">DRIVER LOGIN</div>
-            """), unsafe_allow_html=True)
-            
-            render_driver_login_form()
-            
-            # Register Now section
-            st.markdown(clean_html("""
-            <div class="new-driver-card" style="margin-top: 24px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 8px;">
-                <div style="font-weight: 800; font-size: 15px; color: #FFFFFF; margin-bottom: 4px;">New Driver?</div>
-                <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">Join RunEV Network</div>
-            """), unsafe_allow_html=True)
-            
-            if st.button("Register Now  →", use_container_width=True, key="driver_register_now_landing_btn"):
-                st.session_state.driver_auth_mode = "register"
-                st.rerun()
-                
-            st.markdown('</div>', unsafe_allow_html=True)
-                
-            # Earn More section
-            st.markdown(clean_html("""
-            <div style="margin-top: 16px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 12px;">
-                <div style="font-weight: 800; font-size: 15px; color: #FFFFFF; margin-bottom: 12px;">Earn More with RunEV</div>
-                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #cbd5e1;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #14e6b0; font-weight: 800;">✓</span> High Demand
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #14e6b0; font-weight: 800;">✓</span> Flexible Hours
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #14e6b0; font-weight: 800;">✓</span> Instant Payments
-                    </div>
-                </div>
-            </div>
-            """), unsafe_allow_html=True)
-            
-            van_img = get_image_or_fallback("fleet_visual.png")
-            if van_img:
-                st.image(van_img, use_column_width=True)
             
     with col_right:
         st.markdown(clean_html("""

@@ -46,9 +46,9 @@ from backend.core.validation import normalize_email, password_strength, validate
 
 
 
-st.write("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
-st.write("SUPABASE_ANON_KEY exists:", bool(os.getenv("SUPABASE_ANON_KEY")))
-st.write("RUNEV_USER_APP_URL:", os.getenv("RUNEV_USER_APP_URL"))
+print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+print("SUPABASE_ANON_KEY exists:", bool(os.getenv("SUPABASE_ANON_KEY")))
+print("RUNEV_USER_APP_URL:", os.getenv("RUNEV_USER_APP_URL"))
 
 def clean_html(html_str: str) -> str:
     import re
