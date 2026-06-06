@@ -61,7 +61,7 @@ def request_json(
     method: str,
     path: str,
     token: str | None = None,
-    timeout: int = 30,
+    timeout: int = 60,
     **kwargs: Any,
 ) -> Any:
     try:
