@@ -12,6 +12,10 @@ API_BASE_URL = os.getenv(
 def api_base_url() -> str:
     return os.getenv("RUNEV_API_BASE_URL", API_BASE_URL).rstrip("/")
 
+import streamlit as st
+
+st.write("API URL:", api_base_url())
+
 class ApiError(Exception):
     pass
 

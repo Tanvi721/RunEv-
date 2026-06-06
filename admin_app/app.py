@@ -97,7 +97,7 @@ def inject_driver_styles() -> None:
     
     .block-container:has(.runev-driver-dashboard-landing) div[data-testid="stTextInput"]:has(input[placeholder*="email"]) input,
     .block-container:has(.runev-driver-dashboard-landing) div[data-testid="stTextInput"]:has(input[placeholder*="Email"]) input {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23475569" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.03 6.862L10.27 8.138 8 9.5 5.73 8.138 1.03 12.245A1 1 0 0 0 2 13h12a1 1 0 0 0 .97-.755zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>') !important;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23475569" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>') !important;
         background-repeat: no-repeat !important;
         background-position: 15px center !important;
     }
@@ -498,10 +498,12 @@ def render_driver_auth_header(mode: str) -> None:
 
 
 def render_driver_login_form() -> None:
+    st.markdown('<div class="driver-login-form-wrap">', unsafe_allow_html=True)
     with st.form("driver_password_login_form"):
-        email = st.text_input("Email Address", key="driver_login_email", placeholder="operator@runev.com")
+        email = st.text_input("Email Address", key="driver_login_email", placeholder="Enter your email")
         password = st.text_input("Password", key="driver_login_password", type="password", placeholder="Enter your password")
-        if st.form_submit_button("Launch Fleet Console", use_container_width=True):
+        remember_me = st.checkbox("Remember me", key="driver_remember_me")
+        if st.form_submit_button("Login", use_container_width=True):
             try:
                 normalized_email = normalize_email(email)
                 if not password:
@@ -510,10 +512,13 @@ def render_driver_login_form() -> None:
                 complete_login(token_data["access_token"])
             except (ValueError, api_client.ApiError) as exc:
                 st.error(str(exc))
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("Forgot Password", use_container_width=True, type="secondary"):
+    st.markdown('<div class="forgot-link-btn">', unsafe_allow_html=True)
+    if st.button("Forgot Password?", use_container_width=True, key="driver_forgot_link_btn"):
         st.session_state.driver_auth_mode = "forgot"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(
         textwrap.dedent("""
@@ -1047,10 +1052,15 @@ def render_login() -> None:
     /* 2x2 Metric Grid & Metric Cards like User App */
     .fleet-metrics-grid {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
+        grid-template-columns: repeat(4, 1fr) !important;
         gap: 10px !important;
         width: 100% !important;
         margin-top: 0.5rem !important;
+    }
+    @media (max-width: 768px) {
+        .fleet-metrics-grid {
+            grid-template-columns: 1fr 1fr !important;
+        }
     }
     .fleet-metric-card {
         background: rgba(15, 23, 42, 0.75) !important;
@@ -1181,13 +1191,77 @@ def render_login() -> None:
     .block-container:has(.runev-driver-dashboard-landing) .stCaptionContainer * {
         color: #94A3B8 !important;
     }
+    
+    /* Custom Driver Login Form Styling */
+    .driver-login-form-wrap [data-testid="stFormSubmitButton"] button {
+        background: #00E5A8 !important;
+        color: #0b1220 !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-size: 15px !important;
+        box-shadow: 0 4px 20px rgba(0, 229, 168, 0.2) !important;
+        transition: all 0.3s !important;
+        width: 100% !important;
+        height: 44px !important;
+    }
+    .driver-login-form-wrap [data-testid="stFormSubmitButton"] button:hover {
+        background: #00c48f !important;
+        box-shadow: 0 6px 22px rgba(0, 229, 168, 0.35) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Forgot Password link button */
+    .forgot-link-btn button {
+        background: transparent !important;
+        border: none !important;
+        color: #cbd5e1 !important;
+        box-shadow: none !important;
+        text-decoration: none !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        padding: 0 !important;
+        margin: 12px auto 0 !important;
+        min-height: unset !important;
+        width: auto !important;
+        display: block !important;
+    }
+    .forgot-link-btn button:hover {
+        color: #ffffff !important;
+        text-decoration: underline !important;
+        background: transparent !important;
+    }
+    
+    /* Register Now outlined button inside new-driver-card */
+    .new-driver-card button {
+        background: transparent !important;
+        border: 1px solid #00E5A8 !important;
+        color: #00E5A8 !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        transition: all 0.3s !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        height: 44px !important;
+    }
+    .new-driver-card button:hover {
+        background: rgba(0, 229, 168, 0.1) !important;
+        border-color: #00E5A8 !important;
+        color: #00E5A8 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Perfect checkbox alignment */
+    .block-container:has(.runev-driver-dashboard-landing) [data-testid="stForm"] div[data-testid="stCheckbox"] {
+        margin: 8px 0 12px 0 !important;
+    }
     </style>
     """
     st.markdown(landing_css, unsafe_allow_html=True)    st.markdown(clean_html("""
     <div class="premium-header brand-header">
         <div class="logo-container">
             <div class="runev-logo" style="font-size: 24px; font-weight: 800; color: #FFFFFF;">RunEV<span style="color: #00E5A8;">.</span></div>
-            <span class="driver-app-badge app-badge" style="background: rgba(20, 230, 176, 0.1); border: 1px solid rgba(20, 230, 176, 0.2); color: #14e6b0; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;">Driver App</span>
+            <span class="driver-app-badge app-badge" style="background: rgba(20, 230, 176, 0.1); border: 1px solid rgba(20, 230, 176, 0.2); color: #14e6b0; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;">DRIVER APP</span>
         </div>
         <div class="banner-status" style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;">
             <span class="status-dot" style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; display: inline-block;"></span> Live Network Active
@@ -1230,15 +1304,16 @@ def render_login() -> None:
             
             # Register Now section
             st.markdown(clean_html("""
-            <div style="margin-top: 24px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 8px;">
+            <div class="new-driver-card" style="margin-top: 24px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); margin-bottom: 8px;">
                 <div style="font-weight: 800; font-size: 15px; color: #FFFFFF; margin-bottom: 4px;">New Driver?</div>
                 <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">Join RunEV Network</div>
-            </div>
             """), unsafe_allow_html=True)
             
             if st.button("Register Now  →", use_container_width=True, key="driver_register_now_landing_btn"):
                 st.session_state.driver_auth_mode = "register"
                 st.rerun()
+                
+            st.markdown('</div>', unsafe_allow_html=True)
                 
             # Earn More section
             st.markdown(clean_html("""

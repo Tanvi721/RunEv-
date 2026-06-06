@@ -1494,3 +1494,71 @@ section.main > div {
 .stApp:has(.runev-auth-page) .right-panel-header {
     margin-top: 0 !important;
 }
+
+/* Custom Login Forms Overrides (Magic Link vs Password Login) */
+.magic-link-form-wrap [data-testid="stFormSubmitButton"] button {
+    background: #172033 !important;
+    border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 44px !important;
+}
+
+.magic-link-form-wrap [data-testid="stFormSubmitButton"] button::before {
+    content: "✉" !important;
+    margin-right: 8px !important;
+    font-size: 14px !important;
+    display: inline-block !important;
+}
+
+.magic-link-form-wrap [data-testid="stFormSubmitButton"] button:hover {
+    background: #1e293b !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    transform: translateY(-1px) !important;
+}
+
+.password-login-form-wrap [data-testid="stFormSubmitButton"] button,
+.signup-form-wrap [data-testid="stFormSubmitButton"] button {
+    background: linear-gradient(90deg, #00E5A8 0%, #3B82F6 50%, #8B5CF6 100%) !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    font-size: 15px !important;
+    box-shadow: 0 4px 20px rgba(0, 229, 168, 0.2) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: 100% !important;
+    height: 44px !important;
+}
+
+.password-login-form-wrap [data-testid="stFormSubmitButton"] button:hover,
+.signup-form-wrap [data-testid="stFormSubmitButton"] button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 30px rgba(0, 229, 168, 0.35) !important;
+    filter: brightness(1.05) !important;
+}
+
+/* Perfect alignment of Remember Me and Forgot Password row on desktop */
+.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) {
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+    margin-bottom: 8px !important;
+}
+
+.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) div[data-testid="column"] {
+    width: auto !important;
+    max-width: 50% !important;
+    flex: unset !important;
+}
+
+.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) .stCheckbox {
+    margin-bottom: 0 !important;
+}
