@@ -45,28 +45,10 @@ from frontend.components.geolocation import live_location_button, validate_coord
 from backend.core.validation import normalize_email, password_strength, validate_full_name, validate_password
 
 
-
-print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
-print("SUPABASE_ANON_KEY exists:", bool(os.getenv("SUPABASE_ANON_KEY")))
-print("RUNEV_USER_APP_URL:", os.getenv("RUNEV_USER_APP_URL"))
-
 def clean_html(html_str: str) -> str:
     import re
     no_comments = re.sub(r"<!--.*?-->", "", html_str, flags=re.DOTALL)
     return " ".join(no_comments.split())
-
-
-def get_image_or_fallback(filename: str) -> str | None:
-    try:
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-        if os.path.exists(path):
-            return path
-        if os.path.exists(filename):
-            return filename
-    except Exception:
-        pass
-    return None
-
 
 
 def inject_premium_user_styles() -> None:
@@ -77,14 +59,6 @@ def inject_premium_user_styles() -> None:
 
 
 configure_page("RunEV - User App", "⚡")
-
-import os
-import streamlit as st
-
-st.write("SUPABASE_URL =", os.getenv("SUPABASE_URL"))
-st.write("SUPABASE_ANON_KEY exists =", bool(os.getenv("SUPABASE_ANON_KEY")))
-st.write("RUNEV_USER_APP_URL =", os.getenv("RUNEV_USER_APP_URL"))
-
 inject_global_styles()
 inject_premium_user_styles()
 init_theme_state()
@@ -963,9 +937,9 @@ def render_login() -> None:
         <div class="premium-header brand-header">
             <div class="logo-container">
                 <div class="runev-logo">RunEV<span>.</span></div>
-                <span class="user-app-badge app-badge">USER APP</span>
+                <span class="user-app-badge app-badge">User App</span>
             </div>
-            <a href="mailto:support@runev.com" class="help-btn">Need help? 💬</a>
+            <a href="mailto:support@runev.com" class="help-btn">Need help?</a>
         </div>
         """),
         unsafe_allow_html=True,
@@ -973,19 +947,12 @@ def render_login() -> None:
     
     # Split Layout columns: 35% Left, 65% Right
     col_left, col_right = st.columns([0.35, 0.65], gap="large")
-    st.markdown("""
-<style>
-.block-container{
-    padding-top:0rem !important;
-}
-</style>
-""", unsafe_allow_html=True)
     
     with col_left:
         st.markdown(
             textwrap.dedent("""
             <div class="small-label">ON-DEMAND EV CHARGING</div>
-            <h1 class="main-title hero-title">Run Out of Charge?<br><span>RunEV Comes To You. ⚡</span></h1>
+            <h1 class="main-title hero-title">Run Out of Charge?<br><span>RunEV Comes To You.</span></h1>
             <p class="supporting-text">Request a charging van in minutes, track it live, pay securely, and continue your trip without waiting.</p>
             """),
             unsafe_allow_html=True,
@@ -994,35 +961,22 @@ def render_login() -> None:
         # Feature cards
         st.markdown(
             textwrap.dedent("""
-            <div class="feature-cards-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
-                <div class="feature-card green-card" style="padding: 10px 12px; display: flex; flex-direction: row; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: #10b981; min-width: 28px;">⚡</div>
-                    <div style="display: flex; flex-direction: column; text-align: left;">
-                        <h4 class="feature-title" style="font-size: 14px; margin: 0; font-weight: 700; color: #FFFFFF; line-height: 1.2;">Fast Response</h4>
-                    </div>
+            <div class="feature-cards-container">
+                <div class="feature-card green-card">
+                    <div class="feature-icon-wrapper">⚡</div>
+                    <h4 class="feature-title">Fast Response</h4>
+                    <p class="feature-desc">Average arrival under 15 minutes</p>
                 </div>
-                <div class="feature-card blue-card" style="padding: 10px 12px; display: flex; flex-direction: row; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; min-width: 28px;">📍</div>
-                    <div style="display: flex; flex-direction: column; text-align: left;">
-                        <h4 class="feature-title" style="font-size: 14px; margin: 0; font-weight: 700; color: #FFFFFF; line-height: 1.2;">Live Tracking</h4>
-                        <p class="feature-desc" style="font-size: 11px; margin: 0; color: #94A3B8; line-height: 1.2;">Track your charging van in real time</p>
-                    </div>
+                <div class="feature-card blue-card">
+                    <div class="feature-icon-wrapper">📍</div>
+                    <h4 class="feature-title">Live Tracking</h4>
+                    <p class="feature-desc">Track your charging van in real time</p>
                 </div>
-                <div class="feature-card purple-card" style="padding: 10px 12px; display: flex; flex-direction: row; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: #3b82f6; min-width: 28px;">🧭</div>
-                    <div style="display: flex; flex-direction: column; text-align: left;">
-                        <h4 class="feature-title" style="font-size: 14px; margin: 0; font-weight: 700; color: #FFFFFF; line-height: 1.2;">Track Map</h4>
-                        <p class="feature-desc" style="font-size: 11px; margin: 0; color: #94A3B8; line-height: 1.2;">Track Map in real time</p>
-                    </div>
+                <div class="feature-card purple-card">
+                    <div class="feature-icon-wrapper">🛡️</div>
+                    <h4 class="feature-title">Secure Payments</h4>
+                    <p class="feature-desc">UPI, Cards, Wallets</p>
                 </div>
-                <div class="feature-card purple-card" style="padding: 10px 12px; display: flex; flex-direction: row; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                    <div class="feature-icon-wrapper" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: #3b82f6; min-width: 28px;">🛡️</div>
-                    <div style="display: flex; flex-direction: column; text-align: left;">
-                        <h4 class="feature-title" style="font-size: 14px; margin: 0; font-weight: 700; color: #FFFFFF; line-height: 1.2;">Secure Payments</h4>
-                        <p class="feature-desc" style="font-size: 11px; margin: 0; color: #94A3B8; line-height: 1.2;">UPI, Cards, Wallets</p>
-                    </div>
-                </div>
-            </div>
             """),
             unsafe_allow_html=True,
         )
@@ -1070,6 +1024,7 @@ def render_login() -> None:
             else:
                 # Regular Auth Container with Tabs
                 pass
+                
                 tab_login, tab_signup, tab_magic = st.tabs(["Login", "Sign Up", "Passwordless Login"])
                 
                 with tab_login:
@@ -1079,7 +1034,6 @@ def render_login() -> None:
                     
                     st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
                     
-                    st.markdown('<div class="password-login-form-wrap">', unsafe_allow_html=True)
                     with st.form("user_password_login_form"):
                         email = st.text_input("Email Address", key="user_login_email", placeholder="Enter your email")
                         password = st.text_input("Password", key="user_login_password", type="password", placeholder="Enter your password")
@@ -1110,7 +1064,6 @@ def render_login() -> None:
                                 complete_login(token_data["access_token"])
                             except (ValueError, api_client.ApiError) as exc:
                                 st.error(str(exc))
-                    st.markdown('</div>', unsafe_allow_html=True)
                                 
                     st.markdown(
                         textwrap.dedent("""
@@ -1129,7 +1082,6 @@ def render_login() -> None:
                     
                     st.markdown('<div class="premium-divider">OR</div>', unsafe_allow_html=True)
                     
-                    st.markdown('<div class="signup-form-wrap">', unsafe_allow_html=True)
                     with st.form("user_signup_form"):
                         name = st.text_input("Full Name", key="user_signup_name", placeholder="Enter your full name")
                         email = st.text_input("Email Address", key="user_signup_email", placeholder="Enter your email")
@@ -1171,7 +1123,6 @@ def render_login() -> None:
                                     complete_login(token_data["access_token"])
                                 except (ValueError, api_client.ApiError) as exc:
                                     st.error(str(exc))
-                    st.markdown('</div>', unsafe_allow_html=True)
                                     
                     st.markdown(
                         textwrap.dedent("""
@@ -1183,11 +1134,19 @@ def render_login() -> None:
                     )
                     
                 with tab_magic:
-                    st.markdown('<div class="magic-link-form-wrap">', unsafe_allow_html=True)
+                    st.markdown(
+                        textwrap.dedent("""
+                        <div class="passwordless-helper-text" style="margin-bottom: 12px; padding: 4px 0;">
+                            <strong style="color: #00E5A8; display: block; font-size: 14px; margin-bottom: 4px;">Passwordless Login</strong>
+                            <p style="color: #94A3B8; font-size: 13px; margin: 0; line-height: 1.4;">Enter your email and we'll send a secure sign-in link. No password required.</p>
+                        </div>
+                        """),
+                        unsafe_allow_html=True,
+                    )
                     with st.form("user_magic_link_form"):
                         magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="Enter your email")
                         
-                        magic_submit = st.form_submit_button("Send Magic Link", use_container_width=True, disabled=bool(auth_loading))
+                        magic_submit = st.form_submit_button("Send Sign-in Link", use_container_width=True, disabled=bool(auth_loading))
                         if magic_submit:
                             try:
                                 normalized_email = normalize_email(magic_email)
@@ -1195,7 +1154,6 @@ def render_login() -> None:
                                 st.success("Sign-in link sent. Open the email on this device to finish signing in.")
                             except (ValueError, supabase_auth.SupabaseAuthError) as exc:
                                 st.error(str(exc))
-                    st.markdown('</div>', unsafe_allow_html=True)
                                 
                     if st.session_state.get("auth_email_sent"):
                         st.success(f"Sign-in link sent to {st.session_state.auth_email_sent}.")
@@ -1210,15 +1168,6 @@ def render_login() -> None:
                         unsafe_allow_html=True,
                     )
                         
-                # Left column footer copyright
-                st.markdown(
-                    textwrap.dedent("""
-                    <div style="width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; margin-top: 25px; text-align: center; font-size: 12px; color: #94a3b8;">
-                        © 2024 RunEV. All rights reserved.
-                    </div>
-                    """),
-                    unsafe_allow_html=True,
-                )
                 pass
         
     with col_right:
@@ -1236,124 +1185,110 @@ def render_login() -> None:
             unsafe_allow_html=True,
         )
         
-        # Render the large premium EV visual image robustly
-        hero_img = get_image_or_fallback("hero_visual.png")
-        if hero_img:
-            import base64
-            try:
-                with open(hero_img, "rb") as f:
-                    img_base64 = base64.b64encode(f.read()).decode()
-                st.markdown(
-                    f'<img src="data:image/png;base64,{img_base64}" style="width: 100%; border-radius: 16px; margin-bottom: 12px; display: block;" />',
-                    unsafe_allow_html=True,
-                )
-            except Exception:
-                st.info("⚡ RunEV Hero Visual Placeholder")
-        else:
-            st.info("⚡ RunEV Hero Visual Placeholder")
+        # Render the large premium EV visual image
+        st.image("user_app/hero_visual.png", use_container_width=True)
         
-        # Live status dashboard layout
-        dashboard_html = """
-        <!-- Live Tracking Card -->
-        <div class="dash-card tracking-card text-tracking-card" style="width: 100%; min-height: 110px; margin-bottom: 12px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.6); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
-            <div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                <span>Live Tracking</span>
-                <span class="dash-card-icon" style="color: #ef4444; font-size: 14px;">📍</span>
-            </div>
-            <div class="tracking-status-wrap" style="margin-top: 6px;">
-                <div class="tracking-status-title" style="font-size: 15px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px;">Vehicle En Route</div>
-                <div class="tracking-progress-container" style="position: relative; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; margin-bottom: 10px; width: 100%;">
-                    <div class="tracking-progress-line" style="position: absolute; left: 0; top: 0; height: 100%; width: 60%; background: #00E5A8; border-radius: inherit;"></div>
-                    <div class="tracking-nodes" style="display: flex; justify-content: space-between; position: absolute; width: 100%; top: -3px;">
-                        <span class="node active" style="width: 10px; height: 10px; border-radius: 50%; background: #00E5A8; box-shadow: 0 0 8px #00E5A8; display: inline-block;"></span>
-                        <span class="node animate-pulse" style="width: 10px; height: 10px; border-radius: 50%; background: #00E5A8; box-shadow: 0 0 8px #00E5A8; display: inline-block;"></span>
-                        <span class="node" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: inline-block;"></span>
-                    </div>
-                </div>
-                <div class="tracking-details-row" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="tracking-eta-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">ETA 12 MIN</div>
-                    <div class="tracking-dist-lbl" style="font-size: 12px; color: #94A3B8;">2.4 km away</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 2x2 Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; width: 100%;">
-            <!-- Battery Card -->
-            <div class="dash-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; height: 96px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); box-sizing: border-box;">
-                <div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span>Battery Status</span>
-                    <span class="dash-card-icon" style="color: #10b981; font-size: 14px;">🔋</span>
-                </div>
-                <div>
-                    <div class="dash-card-value" style="font-size: 18px; font-weight: 800; color: #FFFFFF; line-height: 1.1; margin: 2px 0;">18%</div>
-                    <div class="dash-card-desc" style="font-size: 11px; color: #94A3B8;">Needs charging soon</div>
-                </div>
-            </div>
-            <!-- Charging Power Card -->
-            <div class="dash-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; height: 96px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); box-sizing: border-box;">
-                <div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span>Charging Power</span>
-                    <span class="dash-card-icon" style="color: #fb923c; font-size: 14px;">⚡</span>
-                </div>
-                <div>
-                    <div class="dash-card-value" style="font-size: 18px; font-weight: 800; color: #FFFFFF; line-height: 1.1; margin: 2px 0;">22 kW</div>
-                    <div class="dash-card-desc" style="font-size: 11px; color: #94A3B8;">DC Fast Charging</div>
-                </div>
-            </div>
-            <!-- Payment Card -->
-            <div class="dash-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; height: 96px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); box-sizing: border-box;">
-                <div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span>Secure Payments</span>
-                    <span class="dash-card-icon" style="color: #60a5fa; font-size: 14px;">💳</span>
-                </div>
-                <div>
-                    <div class="dash-card-value" style="font-size: 13px; font-weight: 800; color: #FFFFFF; line-height: 1.1; margin: 2px 0; white-space: normal !important;">UPI, Cards, Wallets, Net Banking</div>
-                </div>
-            </div>
-            <!-- Support Card -->
-            <div class="dash-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; height: 96px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); box-sizing: border-box;">
-                <div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span>24/7 Support</span>
-                    <span class="dash-card-icon" style="color: #cbd5e1; font-size: 14px;">🎧</span>
-                </div>
-                <div>
-                    <div class="dash-card-value" style="font-size: 15px; font-weight: 800; color: #FFFFFF; line-height: 1.1; margin: 2px 0;">24/7 Available</div>
-                    <div class="dash-card-desc" style="font-size: 11px; color: #94A3B8;">Chat, Phone, Emergency</div>
-                </div>
-            </div>
-        </div>
-        """
+        # Live status dashboard grid
+        dashboard_html = """<div class="dashboard-grid">
+<!-- Live Tracking Card -->
+<div class="dash-card tracking-card text-tracking-card" style="min-height: 120px;">
+<div class="dash-card-header">
+<span>Live Tracking</span>
+<span class="dash-card-icon">📍</span>
+</div>
+<div class="tracking-status-wrap">
+<div class="tracking-status-title">Vehicle En Route</div>
+<div class="tracking-progress-container">
+<div class="tracking-progress-line">
+<span class="tracking-progress-fill"></span>
+</div>
+<div class="tracking-nodes">
+<span class="node active"></span>
+<span class="node animate-pulse"></span>
+<span class="node font-blue"></span>
+</div>
+</div>
+<div class="tracking-details-row">
+<div class="tracking-eta-badge">ETA 12 MIN</div>
+<div class="tracking-dist-lbl">2.4 km away</div>
+</div>
+</div>
+</div>
+<!-- Battery Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Battery Status</span>
+<span class="dash-card-icon">🔋</span>
+</div>
+<div>
+<div class="dash-card-value">18%</div>
+<div class="dash-card-desc">Needs charging soon</div>
+</div>
+</div>
+<!-- Charging Power Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Charging Power</span>
+<span class="dash-card-icon">⚡</span>
+</div>
+<div>
+<div class="dash-card-value">22 kW</div>
+<div class="dash-card-desc">DC Fast Charging</div>
+</div>
+</div>
+<!-- Payment Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>Secure Payments</span>
+<span class="dash-card-icon">💳</span>
+</div>
+<div>
+<div class="dash-card-value">Secure Payments</div>
+<div class="dash-card-desc">UPI, Cards, Wallets, Net Banking</div>
+</div>
+</div>
+<!-- Support Card -->
+<div class="dash-card">
+<div class="dash-card-header">
+<span>24/7 Support</span>
+<span class="dash-card-icon">🎧</span>
+</div>
+<div>
+<div class="dash-card-value">24/7 Available</div>
+<div class="dash-card-desc">Chat, Phone, Emergency Assistance</div>
+</div>
+</div>
+</div>"""
         st.markdown(clean_html(dashboard_html), unsafe_allow_html=True)
         
     # Bottom Benefits Bar
     benefits_html = """<div class="benefits-bar">
 <div class="benefit-item">
-<div class="benefit-icon">🛡️</div>
+<div class="benefit-icon">⏱️</div>
 <div class="benefit-text-wrap">
-<div class="benefit-title">Safe & Reliable</div>
-<div class="benefit-desc">Verified professionals</div>
+<div class="benefit-title">Zero Waiting Time</div>
+<div class="benefit-desc">We come to you</div>
 </div>
 </div>
 <div class="benefit-item">
-<div class="benefit-icon">🏷️</div>
+<div class="benefit-icon">🛡️</div>
 <div class="benefit-text-wrap">
-<div class="benefit-title">Affordable</div>
-<div class="benefit-desc">Transparent pricing</div>
+<div class="benefit-title">Safe & Reliable</div>
+<div class="benefit-desc">Verified vans & experts</div>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">💸</div>
+<div class="benefit-text-wrap">
+<div class="benefit-title">Transparent Pricing</div>
+<div class="benefit-desc">No hidden charges</div>
 </div>
 </div>
 <div class="benefit-item">
 <div class="benefit-icon">🌱</div>
 <div class="benefit-text-wrap">
-<div class="benefit-title">Eco Friendly</div>
-<div class="benefit-desc">Zero Emission Future</div>
-</div>
-</div>
-<div class="benefit-item">
-<div class="benefit-icon">⏱️</div>
-<div class="benefit-text-wrap">
-<div class="benefit-title">Always On</div>
-<div class="benefit-desc">24/7 Service</div>
+<div class="benefit-title">Better For The Planet</div>
+<div class="benefit-desc">Drive clean, stay green</div>
 </div>
 </div>
 </div>"""

@@ -12,8 +12,6 @@ API_BASE_URL = os.getenv(
 def api_base_url() -> str:
     return os.getenv("RUNEV_API_BASE_URL", API_BASE_URL).rstrip("/")
 
-print("API URL:", api_base_url())
-
 class ApiError(Exception):
     pass
 
@@ -59,7 +57,7 @@ def request_json(
     method: str,
     path: str,
     token: str | None = None,
-    timeout: int = 60,
+    timeout: int = 30,
     **kwargs: Any,
 ) -> Any:
     try:

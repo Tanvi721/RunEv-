@@ -51,19 +51,6 @@ def clean_html(html_str: str) -> str:
     return " ".join(no_comments.split())
 
 
-def get_image_or_fallback(filename: str) -> str | None:
-    try:
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-        if os.path.exists(path):
-            return path
-        if os.path.exists(filename):
-            return filename
-    except Exception:
-        pass
-    return None
-
-
-
 def inject_driver_styles() -> None:
     styles = """
     <style>
@@ -97,7 +84,7 @@ def inject_driver_styles() -> None:
     
     .block-container:has(.runev-driver-dashboard-landing) div[data-testid="stTextInput"]:has(input[placeholder*="email"]) input,
     .block-container:has(.runev-driver-dashboard-landing) div[data-testid="stTextInput"]:has(input[placeholder*="Email"]) input {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23475569" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>') !important;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23475569" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.03 6.862L10.27 8.138 8 9.5 5.73 8.138 1.03 12.245A1 1 0 0 0 2 13h12a1 1 0 0 0 .97-.755zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>') !important;
         background-repeat: no-repeat !important;
         background-position: 15px center !important;
     }
@@ -498,12 +485,10 @@ def render_driver_auth_header(mode: str) -> None:
 
 
 def render_driver_login_form() -> None:
-    st.markdown('<div class="driver-login-form-wrap">', unsafe_allow_html=True)
     with st.form("driver_password_login_form"):
-        email = st.text_input("Email Address", key="driver_login_email", placeholder="Enter your email")
+        email = st.text_input("Email Address", key="driver_login_email", placeholder="operator@runev.com")
         password = st.text_input("Password", key="driver_login_password", type="password", placeholder="Enter your password")
-        remember_me = st.checkbox("Remember me", key="driver_remember_me")
-        if st.form_submit_button("Login", use_container_width=True):
+        if st.form_submit_button("Launch Fleet Console", use_container_width=True):
             try:
                 normalized_email = normalize_email(email)
                 if not password:
@@ -512,13 +497,10 @@ def render_driver_login_form() -> None:
                 complete_login(token_data["access_token"])
             except (ValueError, api_client.ApiError) as exc:
                 st.error(str(exc))
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="forgot-link-btn">', unsafe_allow_html=True)
-    if st.button("Forgot Password?", use_container_width=True, key="driver_forgot_link_btn"):
+    if st.button("Forgot Password", use_container_width=True, type="secondary"):
         st.session_state.driver_auth_mode = "forgot"
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(
         textwrap.dedent("""
@@ -741,35 +723,12 @@ def render_login() -> None:
     
     landing_css = """
     <style>
-    html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
-        background-image:
+    .stApp:has(.runev-driver-dashboard-landing),
+    body:has(.runev-driver-dashboard-landing) {
+        background:
             radial-gradient(circle at 12% 12%, rgba(0, 229, 168, 0.14), transparent 28rem),
             linear-gradient(135deg, #0b1220 0%, #111827 52%, #172033 100%) !important;
-        background-color: #0b1220 !important;
         color: #f8fafc !important;
-        
-        /* Force theme variables directly on elements to block overrides */
-        --st-background-color: #0b1220 !important;
-        --st-secondary-background-color: #111827 !important;
-        --st-text-color: #f8fafc !important;
-        --st-primary-color: #14e6b0 !important;
-
-        --background-color: #0b1220 !important;
-        --secondary-background-color: #111827 !important;
-        --text-color: #f8fafc !important;
-        --primary-color: #14e6b0 !important;
-    }
-
-    [data-testid="stAppViewBlockContainer"],
-    [data-testid="stVerticalBlock"],
-    [data-testid="stHorizontalBlock"],
-    [data-testid="column"],
-    [data-testid="column"] > div,
-    section.main,
-    .main,
-    .block-container {
-        background-color: transparent !important;
-        background: transparent !important;
     }
 
     .block-container:has(.runev-driver-dashboard-landing) [data-testid="column"] {
@@ -1014,7 +973,7 @@ def render_login() -> None:
         flex-direction: column !important;
         gap: 4px !important;
         margin-bottom: 12px !important;
-        margin-top: 0 !important;
+        margin-top: 36px !important;
     }
     .preview-eyebrow {
         font-size: 11px !important;
@@ -1052,15 +1011,10 @@ def render_login() -> None:
     /* 2x2 Metric Grid & Metric Cards like User App */
     .fleet-metrics-grid {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: 1fr 1fr !important;
         gap: 10px !important;
         width: 100% !important;
         margin-top: 0.5rem !important;
-    }
-    @media (max-width: 768px) {
-        .fleet-metrics-grid {
-            grid-template-columns: 1fr 1fr !important;
-        }
     }
     .fleet-metric-card {
         background: rgba(15, 23, 42, 0.75) !important;
@@ -1191,290 +1145,95 @@ def render_login() -> None:
     .block-container:has(.runev-driver-dashboard-landing) .stCaptionContainer * {
         color: #94A3B8 !important;
     }
-    
-    /* Custom Driver Login Form Styling */
-    .driver-login-form-wrap [data-testid="stFormSubmitButton"] button {
-        background: #00E5A8 !important;
-        color: #0b1220 !important;
-        font-weight: 700 !important;
-        border-radius: 12px !important;
-        border: none !important;
-        font-size: 15px !important;
-        box-shadow: 0 4px 20px rgba(0, 229, 168, 0.2) !important;
-        transition: all 0.3s !important;
-        width: 100% !important;
-        height: 44px !important;
-    }
-    .driver-login-form-wrap [data-testid="stFormSubmitButton"] button:hover {
-        background: #00c48f !important;
-        box-shadow: 0 6px 22px rgba(0, 229, 168, 0.35) !important;
-        transform: translateY(-1px) !important;
-    }
-    
-    /* Forgot Password link button */
-    .forgot-link-btn button {
-        background: transparent !important;
-        border: none !important;
-        color: #cbd5e1 !important;
-        box-shadow: none !important;
-        text-decoration: none !important;
-        font-size: 13px !important;
-        font-weight: 600 !important;
-        padding: 0 !important;
-        margin: 12px auto 0 !important;
-        min-height: unset !important;
-        width: auto !important;
-        display: block !important;
-    }
-    .forgot-link-btn button:hover {
-        color: #ffffff !important;
-        text-decoration: underline !important;
-        background: transparent !important;
-    }
-    
-    /* Register Now outlined button inside new-driver-card */
-    .new-driver-card button {
-        background: transparent !important;
-        border: 1px solid #00E5A8 !important;
-        color: #00E5A8 !important;
-        font-weight: 700 !important;
-        border-radius: 12px !important;
-        transition: all 0.3s !important;
-        box-shadow: none !important;
-        width: 100% !important;
-        height: 44px !important;
-    }
-    .new-driver-card button:hover {
-        background: rgba(0, 229, 168, 0.1) !important;
-        border-color: #00E5A8 !important;
-        color: #00E5A8 !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Perfect checkbox alignment */
-    .block-container:has(.runev-driver-dashboard-landing) [data-testid="stForm"] div[data-testid="stCheckbox"] {
-        margin: 8px 0 12px 0 !important;
-    }
     </style>
     """
-    st.markdown(landing_css, unsafe_allow_html=True)    st.markdown(clean_html("""
-    <div class="premium-header brand-header">
-        <div class="logo-container">
-            <div class="runev-logo" style="font-size: 24px; font-weight: 800; color: #FFFFFF;">RunEV<span style="color: #00E5A8;">.</span></div>
-            <span class="driver-app-badge app-badge" style="background: rgba(20, 230, 176, 0.1); border: 1px solid rgba(20, 230, 176, 0.2); color: #14e6b0; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;">DRIVER APP</span>
+    st.markdown(landing_css, unsafe_allow_html=True)
+
+    st.markdown(clean_html("""
+    <div class="runev-fleet-hero-banner">
+        <div class="banner-content">
+            <span class="banner-logo">⚡ RunEV Dispatch</span>
+            <span class="banner-divider">|</span>
+            <span class="banner-subtitle">OPERATIONS COMMAND CENTRE</span>
         </div>
-        <div class="banner-status" style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;">
-            <span class="status-dot" style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; display: inline-block;"></span> Live Network Active
+        <div class="banner-status">
+            <span class="status-dot"></span> Live Network Active
         </div>
     </div>
     """), unsafe_allow_html=True)
     
-    col_left, col_right = st.columns([0.35, 0.65], gap="large")
-    st.markdown("""
-<style>
-.block-container {
-    padding-top: 0rem !important;
-}
-</style>
-""", unsafe_allow_html=True)
+    col_left, col_right = st.columns([0.58, 0.42], gap="medium")
     
     with col_left:
-        tab_login, tab_register = st.tabs(["Login", "Registration"])
+        st.markdown(clean_html("""
+        <div class="runev-fleet-label">ON-DEMAND DISPATCH PLATFORM</div>
+        <h1 class="runev-fleet-main-heading">RunEV Dispatch</h1>
+        <p class="runev-fleet-subheading">Manage charging operations, drivers and fleet performance.</p>
+        """), unsafe_allow_html=True)
         
+        tab_login, tab_register = st.tabs(["Login", "Registration"])
         with tab_login:
             if st.session_state.get("driver_auth_mode") == "forgot":
-                st.markdown(clean_html("""
-                <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">ACCOUNT RECOVERY</div>
-                <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Forgot Password</h1>
-                <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Enter your email to reset your fleet account password.</p>
-                """), unsafe_allow_html=True)
                 render_driver_forgot_password()
             else:
-                st.markdown(clean_html("""
-                <div class="runev-fleet-label" style="font-size: 11px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 2px;">DRIVER LOGIN</div>
-                """), unsafe_allow_html=True)
                 render_driver_login_form()
-                
         with tab_register:
-            st.markdown(clean_html("""
-            <div class="runev-fleet-label" style="font-size: 10px; font-weight: 700; color: #14e6b0; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 0.1rem;">NEW OPERATOR</div>
-            <h1 class="runev-fleet-main-heading" style="font-size: 28px; font-weight: 900; color: #FFFFFF; margin: 0 0 2px 0;">Register Fleet</h1>
-            <p class="runev-fleet-subheading" style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 0.8rem;">Create a fleet account and add your first charging van.</p>
-            """), unsafe_allow_html=True)
             render_driver_register_form()
             
     with col_right:
         st.markdown(clean_html("""
         <div class="right-panel-header">
-            <h2 style="margin: 0; font-size: 26px; font-weight: 800; color: #FFFFFF; line-height: 1.1;">Operations Command Centre</h2>
-            <div style="font-size: 13px; color: #cbd5e1;">Monitor. Respond. Deliver.</div>
+            <div class="preview-eyebrow">LIVE FLEET DASHBOARD</div>
         </div>
+        """), unsafe_allow_html=True)
         
-        <div class="fleet-metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-top: 10px; margin-bottom: 15px;">
-            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
-                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
-                    <span>Active Requests</span>
-                    <span class="metric-icon" style="color: #ef4444; font-weight: 800;">+</span>
+        # Render static illustration image
+        st.image("admin_app/fleet_visual.png", use_container_width=True)
+        
+        st.markdown(clean_html("""
+        <div class="fleet-metrics-grid">
+            <div class="fleet-metric-card">
+                <div class="metric-header">
+                    <span>Today's Revenue</span>
+                    <span class="metric-icon">💰</span>
                 </div>
-                <div class="metric-value text-green" style="font-size: 20px; font-weight: 800; color: #14e6b0; line-height: 1;">8</div>
-                <div style="font-size: 10px; color: #cbd5e1;">Live</div>
+                <div class="metric-value text-green">₹2,45,680</div>
             </div>
-            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
-                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
-                    <span>En Route</span>
-                    <span class="metric-icon">🚐</span>
+            <div class="fleet-metric-card">
+                <div class="metric-header">
+                    <span>Active Drivers</span>
+                    <span class="metric-icon">👥</span>
                 </div>
-                <div class="metric-value text-blue" style="font-size: 20px; font-weight: 800; color: #3b82f6; line-height: 1;">3</div>
-                <div style="font-size: 10px; color: #cbd5e1;">On the way</div>
+                <div class="metric-value text-blue">128</div>
             </div>
-            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
-                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
-                    <span>Charging</span>
+            <div class="fleet-metric-card">
+                <div class="metric-header">
+                    <span>Live Requests</span>
                     <span class="metric-icon">⚡</span>
                 </div>
-                <div class="metric-value text-purple" style="font-size: 20px; font-weight: 800; color: #a855f7; line-height: 1;">2</div>
-                <div style="font-size: 10px; color: #cbd5e1;">In Progress</div>
+                <div class="metric-value text-purple">32</div>
             </div>
-            <div class="fleet-metric-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 82px;">
-                <div class="metric-header" style="display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase;">
-                    <span>Completed Today</span>
-                    <span class="metric-icon">📄</span>
+            <div class="fleet-metric-card">
+                <div class="metric-header">
+                    <span>Fleet SLA</span>
+                    <span class="metric-icon">📈</span>
                 </div>
-                <div class="metric-value text-green" style="font-size: 20px; font-weight: 800; color: #14e6b0; line-height: 1;">14</div>
-                <div style="font-size: 9px; color: #cbd5e1;">+20% vs yesterday</div>
+                <div class="metric-value text-green">99.8%</div>
             </div>
         </div>
         """), unsafe_allow_html=True)
-        
-        # Render visual image
-        fleet_img = get_image_or_fallback("hero_visual.png")
-        if fleet_img:
-            import base64
-            try:
-                with open(fleet_img, "rb") as f:
-                    img_base64 = base64.b64encode(f.read()).decode()
-                st.markdown(
-                    f'<img src="data:image/png;base64,{img_base64}" style="width: 100%; border-radius: 16px; margin-bottom: 12px; display: block;" />',
-                    unsafe_allow_html=True,
-                )
-            except Exception:
-                st.info("⚡ RunEV Fleet Visual Placeholder")
-        else:
-            st.info("⚡ RunEV Fleet Visual Placeholder")
-            
-        # Live Fleet Overview SVG Map
-        st.markdown(clean_html("""
-        <div class="live-fleet-map-container" style="border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: #0a0f1d; padding: 12px; height: 180px; position: relative; overflow: hidden; margin-top: 12px; margin-bottom: 15px;">
-            <div style="font-weight: 800; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Live Fleet Overview</div>
-            <svg width="100%" height="130" viewBox="0 0 400 130" style="background: #0a1122; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
-                <defs>
-                    <pattern id="mapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="0.5"/>
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#mapGrid)" />
-                
-                <path d="M 20,40 L 380,40" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
-                <path d="M 20,90 L 380,90" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
-                <path d="M 80,10 L 80,120" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
-                <path d="M 300,10 L 300,120" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none" />
-                
-                <path d="M 80,90 C 120,90 150,40 300,40" stroke="#10b981" stroke-width="3" stroke-dasharray="5 3" fill="none" />
-                <path d="M 80,90 C 120,90 150,40 190,56" stroke="#10b981" stroke-width="3" fill="none" />
-                
-                <circle cx="80" cy="90" r="5" fill="#10b981" />
-                <circle cx="80" cy="90" r="9" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.5" />
-                
-                <g transform="translate(185, 52)">
-                    <circle cx="6" cy="6" r="12" fill="#047857" opacity="0.3" />
-                    <circle cx="6" cy="6" r="7" fill="#10b981" />
-                    <text x="2" y="9" font-family="sans-serif" font-size="9px" fill="#FFFFFF" font-weight="bold">🚐</text>
-                </g>
-                
-                <g transform="translate(295, 20)">
-                    <path d="M5,0 C2,0 0,2 0,5 C0,8.7 5,14 5,14 C5,14 10,8.7 10,5 C10,2 8,0 5,0 Z" fill="#ef4444" />
-                    <circle cx="5" cy="5" r="2" fill="#FFFFFF" />
-                </g>
-            </svg>
-        </div>
-        
-        <!-- Recent Requests Custom HTML Table -->
-        <div style="border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); padding: 16px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="font-weight: 800; font-size: 14px; color: #FFFFFF;">Recent Requests</span>
-                <span style="font-size: 11px; font-weight: 700; color: #14e6b0; cursor: pointer; border: 1px solid rgba(20, 230, 176, 0.3); padding: 3px 8px; border-radius: 6px;">View All</span>
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); color: #94a3b8; font-weight: 700;">
-                        <th style="padding: 8px 4px;">#</th>
-                        <th style="padding: 8px 4px;">Customer</th>
-                        <th style="padding: 8px 4px;">Location</th>
-                        <th style="padding: 8px 4px;">Status</th>
-                        <th style="padding: 8px 4px;">ETA</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                        <td style="padding: 10px 4px;">1</td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Rahul Sharma</td>
-                        <td style="padding: 10px 4px;">Viman Nagar, Pune</td>
-                        <td style="padding: 10px 4px;"><span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">En Route</span></td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">8 min</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                        <td style="padding: 10px 4px;">2</td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Priya Patel</td>
-                        <td style="padding: 10px 4px;">Baner, Pune</td>
-                        <td style="padding: 10px 4px;"><span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Arrived</span></td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">2 min</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                        <td style="padding: 10px 4px;">3</td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Amit Verma</td>
-                        <td style="padding: 10px 4px;">Kharadi, Pune</td>
-                        <td style="padding: 10px 4px;"><span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Charging</span></td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">15 min</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px 4px;">4</td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">Sneha Iyer</td>
-                        <td style="padding: 10px 4px;">Wakad, Pune</td>
-                        <td style="padding: 10px 4px;"><span style="background: rgba(20, 184, 166, 0.15); color: #00e5a8; border: 1px solid rgba(20, 184, 166, 0.3); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;">Accepted</span></td>
-                        <td style="padding: 10px 4px; font-weight: 600; color: #FFFFFF;">12 min</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Bottom Row with Stats -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(15, 23, 42, 0.4); padding: 12px 16px; margin-bottom: 10px;">
-            <div style="display: flex; gap: 24px;">
-                <div>
-                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Earnings Today</div>
-                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">₹4,250</div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Trips Completed</div>
-                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">5</div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Availability</div>
-                    <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
-                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981;"></span> Online
-                    </div>
-                </div>
-            </div>
-            <div style="border: 1px solid rgba(239, 68, 68, 0.4); padding: 6px 14px; border-radius: 8px; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; background: rgba(239, 68, 68, 0.08);">
-                Go Offline
-            </div>
-        </div>
-        """), unsafe_allow_html=True)
-        
+
     # Render thin footer strip at the bottom of the page
     st.markdown(clean_html("""
-    <div style="width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; margin-top: 15px; text-align: center; font-size: 12px; color: #94a3b8;">
-        © 2024 RunEV. All rights reserved.
+    <div class="runev-fleet-footer">
+        <div class="footer-content">
+            <span class="footer-label">FLEET STATS:</span>
+            <span class="footer-item"><span class="footer-num">24</span> Vans</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-item"><span class="footer-num">128</span> Sessions</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-item"><span class="footer-num">99.8%</span> SLA</span>
+        </div>
     </div>
     """), unsafe_allow_html=True)
 

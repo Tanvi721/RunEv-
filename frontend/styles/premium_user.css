@@ -3,72 +3,23 @@
 /* Base Styles & Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
-:root {
-    /* Force Streamlit theme variables to dark values globally */
-    --st-background-color: #020617 !important;
-    --st-secondary-background-color: #0b1220 !important;
-    --st-text-color: #f8fafc !important;
-    --st-primary-color: #00e5a8 !important;
-    --st-border-color: rgba(148, 163, 184, 0.18) !important;
-    
-    --background-color: #020617 !important;
-    --secondary-background-color: #0b1220 !important;
-    --text-color: #f8fafc !important;
-    --primary-color: #00e5a8 !important;
-    --border-color: rgba(148, 163, 184, 0.18) !important;
-}
-
-/* Outermost body, html, root and app wrapper get the dark background and font */
-html, body, #root, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
+html, body, [class*="css"], .stApp {
     font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
     background-color: #020617 !important;
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 229, 168, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%) !important;
     color: #FFFFFF !important;
-
-    /* Set dark variables directly on containers to override scoped styles */
-    --st-background-color: #020617 !important;
-    --st-secondary-background-color: #0b1220 !important;
-    --st-text-color: #f8fafc !important;
-    --st-primary-color: #00e5a8 !important;
-    
-    --background-color: #020617 !important;
-    --secondary-background-color: #0b1220 !important;
-    --text-color: #f8fafc !important;
-    --primary-color: #00e5a8 !important;
 }
 
-/* Intermediate containers must be transparent so the background shines through */
-[data-testid="stAppViewBlockContainer"],
-[data-testid="stVerticalBlock"],
-[data-testid="stHorizontalBlock"],
-[data-testid="column"],
-[data-testid="column"] > div,
-section.main,
-.main,
-.block-container {
-    background-color: transparent !important;
-    background: transparent !important;
+body, .stApp {
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(0, 229, 168, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%),
+        #020617 !important;
 }
 
 /* Hide default streamlit bars & headers */
 header, [data-testid="stHeader"], [data-testid="stDecoration"] {
     display: none !important;
-}
-
-/* Hide element containers for hidden iframes (e.g. storage components) to prevent empty vertical space */
-div[data-testid="element-container"]:has(iframe[height="0"]),
-div[data-testid="element-container"]:has(iframe[style*="height: 0"]),
-div[data-testid="element-container"]:has(iframe[style*="height:0"]),
-iframe[height="0"],
-iframe[width="0"] {
-    display: none !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
 /* Page constraints to prevent scrolling on desktop */
@@ -94,10 +45,10 @@ iframe[width="0"] {
     }
     .stApp:has(.runev-auth-page) .block-container,
     .stApp:has(.runev-driver-auth-page) .block-container {
-    min-height: auto !important;
-    height: auto !important;
-    overflow: visible !important;
-}
+        min-height: 100vh !important;
+        height: auto !important;
+        overflow-y: auto !important;
+    }
     .block-container {
         padding-top: 0 !important;
         padding-bottom: 0.5rem !important;
@@ -214,7 +165,6 @@ iframe[width="0"] {
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #FFFFFF 30%, #E2E8F0 100%);
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -278,7 +228,6 @@ iframe[width="0"] {
 .main-title span {
     background: linear-gradient(135deg, #00E5A8 0%, #3B82F6 100%);
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -1175,20 +1124,16 @@ div[data-testid="stForm"] button[title*="Password"],
 }
 
 /* 2. Hero Image Height Lock & Streamlit Image Container Style */
-.stApp:has(.runev-auth-page) .hero-image,
-.stApp:has(.runev-auth-page) div[data-testid="stImage"] {
-    height: auto !important;
-    max-height: 350px !important;
+.hero-image, div[data-testid="stImage"] {
+    height: 315px !important;
+    max-height: 315px !important;
     overflow: hidden !important;
     border-radius: 24px !important;
 }
-.stApp:has(.runev-auth-page) .hero-image img,
-.stApp:has(.runev-auth-page) .right-panel-visual-img.hero-image img,
-.stApp:has(.runev-auth-page) div[data-testid="stImage"] img {
-    height: auto !important;
-    max-height: 350px !important;
-    width: 100% !important;
-    object-fit: contain !important;
+.hero-image img, .right-panel-visual-img.hero-image img, div[data-testid="stImage"] img {
+    height: 315px !important;
+    max-height: 315px !important;
+    object-fit: cover !important;
     border-radius: 24px !important;
 }
 
@@ -1215,7 +1160,6 @@ div[data-testid="stForm"] button[title*="Password"],
 }
 
 /* 3b. Glassmorphic styling for Native Tabs & Forms cards */
-.stApp:has(.runev-auth-page) .stTabs,
 .stApp:has(.runev-auth-page) [data-testid="stTabs"],
 .stApp:has(.runev-auth-page) [data-testid="column"]:nth-of-type(1) > div[data-testid="stForm"] {
     background: rgba(15, 23, 42, 0.75) !important;
@@ -1228,7 +1172,6 @@ div[data-testid="stForm"] button[title*="Password"],
     margin-bottom: 24px !important;
 }
 
-.stApp:has(.runev-auth-page) .stTabs div[data-testid="stForm"],
 .stApp:has(.runev-auth-page) [data-testid="stTabs"] div[data-testid="stForm"] {
     background-color: transparent !important;
     border: none !important;
@@ -1381,7 +1324,6 @@ div.stMarkdown .feature-card p,
 .stApp:has(.runev-auth-page) .main-title span {
     background: linear-gradient(135deg, #00E5A8 0%, #3B82F6 100%) !important;
     -webkit-background-clip: text !important;
-    background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
 }
 
@@ -1424,136 +1366,3 @@ div.stMarkdown .feature-card p,
     color: #94A3B8 !important;
 }
 
-.runev-auth-page {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-.block-container {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-section.main > div {
-    padding-top: 0 !important;
-}
-
-/* Fix login page top blank space */
-
-.runev-auth-page,
-.runev-driver-auth-page {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-.stApp:has(.runev-auth-page) .block-container,
-.stApp:has(.runev-driver-auth-page) .block-container,
-.block-container:has(.runev-auth-page),
-.block-container:has(.runev-driver-auth-page) {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-.stApp:has(.runev-auth-page) section.main,
-.stApp:has(.runev-driver-auth-page) section.main,
-.stApp:has(.runev-auth-page) section.main > div,
-.stApp:has(.runev-driver-auth-page) section.main > div,
-.stApp:has(.runev-auth-page) [data-testid="stAppViewContainer"],
-.stApp:has(.runev-driver-auth-page) [data-testid="stAppViewContainer"] {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-.stApp:has(.runev-auth-page),
-.stApp:has(.runev-driver-auth-page) {
-    min-height: auto !important;
-}
-
-.stApp:has(.runev-auth-page) .block-container,
-.stApp:has(.runev-driver-auth-page) .block-container {
-    min-height: auto !important;
-}
-
-/* Force perfect top alignment of columns and remove horizontal spacing gaps */
-.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"] {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    align-items: flex-start !important;
-}
-
-.stApp:has(.runev-auth-page) [data-testid="column"] {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-.stApp:has(.runev-auth-page) [data-testid="column"] > div {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-.stApp:has(.runev-auth-page) .right-panel-header {
-    margin-top: 0 !important;
-}
-
-/* Custom Login Forms Overrides (Magic Link vs Password Login) */
-div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button,
-div.magic-link-form-wrap button {
-    background: #172033 !important;
-    border: 1px solid rgba(148, 163, 184, 0.22) !important;
-    color: #FFFFFF !important;
-    font-weight: 600 !important;
-    border-radius: 12px !important;
-    box-shadow: none !important;
-    transition: all 0.2s !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    height: 44px !important;
-}
-
-div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button::before,
-div.magic-link-form-wrap button::before {
-    content: "✉" !important;
-    margin-right: 8px !important;
-    font-size: 14px !important;
-    display: inline-block !important;
-}
-
-div.magic-link-form-wrap div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover,
-div.magic-link-form-wrap button:hover {
-    background: #1e293b !important;
-    border-color: rgba(148, 163, 184, 0.4) !important;
-    transform: translateY(-1px) !important;
-}
-
-.password-login-form-wrap [data-testid="stFormSubmitButton"] button,
-.signup-form-wrap [data-testid="stFormSubmitButton"] button {
-    background: linear-gradient(90deg, #00E5A8 0%, #3B82F6 50%, #8B5CF6 100%) !important;
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
-    border: none !important;
-    font-size: 15px !important;
-    box-shadow: 0 4px 20px rgba(0, 229, 168, 0.2) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    width: 100% !important;
-    height: 44px !important;
-}
-
-.password-login-form-wrap [data-testid="stFormSubmitButton"] button:hover,
-.signup-form-wrap [data-testid="stFormSubmitButton"] button:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 8px 30px rgba(0, 229, 168, 0.35) !important;
-    filter: brightness(1.05) !important;
-}
-
-/* Perfect alignment of Remember Me and Forgot Password row on desktop */
-.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) {
-    align-items: center !important;
-    margin-bottom: 8px !important;
-}
-
-.stApp:has(.runev-auth-page) [data-testid="stHorizontalBlock"]:has(div[data-testid="stCheckbox"]) .stCheckbox {
-    margin-bottom: 0 !important;
-}

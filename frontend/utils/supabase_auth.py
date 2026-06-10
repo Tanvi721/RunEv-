@@ -8,7 +8,6 @@ from typing import Any
 from urllib.parse import urlencode
 
 import requests
-import streamlit as st
 
 
 class SupabaseAuthError(Exception):
@@ -16,43 +15,15 @@ class SupabaseAuthError(Exception):
 
 
 def supabase_url() -> str:
-    try:
-        return st.secrets.get("SUPABASE_URL", "").rstrip("/")
-    except Exception:
-        return os.getenv("SUPABASE_URL", "").rstrip("/")
+    return os.getenv("SUPABASE_URL", "").rstrip("/")
 
 
 def supabase_anon_key() -> str:
-    try:
-        return st.secrets.get("SUPABASE_ANON_KEY", "")
-    except Exception:
-        return os.getenv("SUPABASE_ANON_KEY", "")
+    return os.getenv("SUPABASE_ANON_KEY", "")
 
 
 def app_url() -> str:
-    # First priority: try to detect dynamically from st.context.headers (for Streamlit >= 1.35.0)
-    try:
-        import streamlit as st
-        if hasattr(st, "context") and hasattr(st.context, "headers"):
-            headers = st.context.headers
-            raw_host = headers.get("X-Forwarded-Host") or headers.get("Host")
-            if raw_host:
-                host = raw_host.split(",")[0].strip()
-                raw_scheme = headers.get("X-Forwarded-Proto") or "https"
-                scheme = raw_scheme.split(",")[0].strip()
-                if "localhost" in host or "127.0.0.1" in host:
-                    scheme = "http"
-                return f"{scheme}://{host}"
-    except Exception:
-        pass
-
-    # Second priority: check environment variable as fallback
-    env_url = os.getenv("RUNEV_USER_APP_URL")
-    if env_url:
-        return env_url.rstrip("/")
-
-    # Third priority: fallback to default
-    return "http://localhost:8501"
+    return os.getenv("RUNEV_USER_APP_URL", "http://localhost:8501").rstrip("/")
 
 
 def is_configured() -> bool:
