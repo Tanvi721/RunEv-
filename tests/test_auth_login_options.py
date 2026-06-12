@@ -160,23 +160,23 @@ def test_driver_password_reset_updates_provider_password():
         json={
             "username": "Fleet Reset",
             "email": "fleet.reset@example.com",
-            "password": "oldpass123",
+            "password": "Oldpass@123",
             "role": "provider",
-            "vehicle_number": "MH12RESET",
+            "vehicle_number": "MH12RE0001",
         },
     )
     assert register_response.status_code == 201
 
     reset_response = client.post(
         "/api/v1/auth/password/reset",
-        json={"email": "fleet.reset@example.com", "new_password": "newpass123"},
+        json={"email": "fleet.reset@example.com", "new_password": "Newpass@123"},
     )
     assert reset_response.status_code == 200
 
-    old_login = client.post("/api/v1/auth/login", json={"email": "fleet.reset@example.com", "password": "oldpass123"})
+    old_login = client.post("/api/v1/auth/login", json={"email": "fleet.reset@example.com", "password": "Oldpass@123"})
     assert old_login.status_code == 401
 
-    new_login = client.post("/api/v1/auth/login", json={"email": "fleet.reset@example.com", "password": "newpass123"})
+    new_login = client.post("/api/v1/auth/login", json={"email": "fleet.reset@example.com", "password": "Newpass@123"})
     assert new_login.status_code == 200
     app.dependency_overrides.clear()
 

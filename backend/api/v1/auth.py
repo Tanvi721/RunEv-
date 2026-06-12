@@ -138,12 +138,17 @@ def reset_password(data: PasswordResetRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    supabase_send_password_reset(data.email)
+    try:
+        supabase_send_password_reset(data.email)
+        supabase_msg = "Password reset email sent via Supabase."
+    except HTTPException as exc:
+        supabase_msg = f"Supabase password reset email not sent: {exc.detail}"
+
     user.hashed_password = get_password_hash(data.new_password)
     user.failed_login_count = 0
     user.locked_until = None
     db.commit()
-    return {"message": "Password reset link sent. Local password has been updated for this development backend."}
+    return {"message": f"Local password has been updated. {supabase_msg}"}
 
 
 @router.post("/supabase/session", response_model=TokenResponse)

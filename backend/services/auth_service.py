@@ -378,7 +378,14 @@ def supabase_auth_request(path: str, payload: dict, token: str | None = None) ->
             detail = response.json().get("msg") or response.json().get("message") or response.json().get("error_description")
         except ValueError:
             detail = response.text
-        raise HTTPException(status_code=400, detail=detail or "Supabase authentication failed")
+        detail = detail or "Supabase authentication failed"
+        if "rate limit" in str(detail).lower() or "limit exceed" in str(detail).lower():
+            detail = (
+                "Email rate limit exceeded. Supabase projects have a default limit of 3 emails/hour. "
+                "Please configure a Custom SMTP provider in your Supabase Dashboard under Settings -> Auth -> SMTP Settings, "
+                "or adjust/disable the rate limits under Settings -> Auth -> Rate Limits."
+            )
+        raise HTTPException(status_code=400, detail=detail)
     return response.json() if response.content else {}
 
 

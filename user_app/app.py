@@ -1025,7 +1025,7 @@ def render_login() -> None:
                 # Regular Auth Container with Tabs
                 pass
                 
-                tab_login, tab_signup, tab_magic = st.tabs(["Login", "Sign Up", "Passwordless Login"])
+                tab_login, tab_signup = st.tabs(["Login", "Sign Up"])
                 
                 with tab_login:
                     google_url = st.session_state.get("google_oauth_url") or prepare_supabase_google_login()
@@ -1133,41 +1133,6 @@ def render_login() -> None:
                         unsafe_allow_html=True,
                     )
                     
-                with tab_magic:
-                    st.markdown(
-                        textwrap.dedent("""
-                        <div class="passwordless-helper-text" style="margin-bottom: 12px; padding: 4px 0;">
-                            <strong style="color: #00E5A8; display: block; font-size: 14px; margin-bottom: 4px;">Passwordless Login</strong>
-                            <p style="color: #94A3B8; font-size: 13px; margin: 0; line-height: 1.4;">Enter your email and we'll send a secure sign-in link. No password required.</p>
-                        </div>
-                        """),
-                        unsafe_allow_html=True,
-                    )
-                    with st.form("user_magic_link_form"):
-                        magic_email = st.text_input("Email Address", key="user_magic_email", placeholder="Enter your email")
-                        
-                        magic_submit = st.form_submit_button("Send Sign-in Link", use_container_width=True, disabled=bool(auth_loading))
-                        if magic_submit:
-                            try:
-                                normalized_email = normalize_email(magic_email)
-                                send_supabase_magic_link(normalized_email)
-                                st.success("Sign-in link sent. Open the email on this device to finish signing in.")
-                            except (ValueError, supabase_auth.SupabaseAuthError) as exc:
-                                st.error(str(exc))
-                                
-                    if st.session_state.get("auth_email_sent"):
-                        st.success(f"Sign-in link sent to {st.session_state.auth_email_sent}.")
-                        
-                    st.markdown(
-                        textwrap.dedent("""
-                        <div class="bottom-auth-section" style="margin-top: 16px; text-align: center;">
-                            <span style="color: #94A3B8; font-size: 14px; display: block; margin-bottom: 4px;">Don't have an account yet?</span>
-                            <a href="?auth_view=signup" target="_self" style="color: #00E5A8; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-block;">Create Free Account →</a>
-                        </div>
-                        """),
-                        unsafe_allow_html=True,
-                    )
-                        
                 pass
         
     with col_right:

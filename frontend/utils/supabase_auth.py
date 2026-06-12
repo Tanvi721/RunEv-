@@ -223,4 +223,10 @@ def _supabase_error(response: requests.Response, fallback: str) -> str:
     message = payload.get("msg") or payload.get("message") or payload.get("error_description") or fallback
     if "invalid api key" in str(message).lower():
         return "Invalid Supabase anon key in .env. Copy the public anon key from your Supabase project API settings."
+    if "rate limit" in str(message).lower() or "limit exceed" in str(message).lower():
+        return (
+            "Email rate limit exceeded. Supabase projects have a default limit of 3 emails/hour. "
+            "To resolve this, configure a Custom SMTP Provider in your Supabase Dashboard under Settings -> Auth -> SMTP Settings, "
+            "or adjust rate limits under Settings -> Auth -> Rate Limits."
+        )
     return message
